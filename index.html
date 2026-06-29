@@ -184,7 +184,36 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .field input:focus{border-color:var(--green)}
 .check{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--body2);margin:6px 0 16px}
 .check input{margin-top:3px}
+.check a{color:var(--green-dark);text-decoration:underline}
 @media(max-width:920px){.booking{grid-template-columns:1fr}}
+
+/* живой виджет расписания */
+#bw{margin-top:36px}
+.bw-locs{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:14px}
+.bw-loc{cursor:pointer;background:#fff;border:1.5px solid var(--stat-bd);border-radius:999px;padding:11px 22px;font-weight:800;font-size:15.5px;color:var(--card-tx);transition:.15s}
+.bw-loc:hover{border-color:var(--green)}
+.bw-loc.active{background:var(--green);border-color:var(--green);color:#fff}
+.bw-meta{text-align:center;color:var(--body2);font-size:14.5px;font-weight:600;margin-bottom:22px;min-height:20px}
+.bw-meta .pill{display:inline-block;background:#fff;border:1px solid var(--card-bd);border-radius:999px;padding:4px 12px;margin:0 4px}
+.bw-day{margin-bottom:22px}
+.bw-day h4{font-family:'Nunito';font-weight:800;font-size:15px;color:var(--head);text-transform:capitalize;margin-bottom:12px;text-align:center}
+.bw-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.bw-slot{display:flex;flex-direction:column;gap:4px;background:#fff;border:1.5px solid var(--card-bd);border-radius:16px;padding:14px 16px;cursor:pointer;transition:.15s;text-align:left}
+.bw-slot:hover:not(.full){border-color:var(--green);transform:translateY(-2px)}
+.bw-slot.active{border-color:var(--green);box-shadow:0 0 0 3px rgba(124,179,66,.18)}
+.bw-slot.full{opacity:.55;cursor:not-allowed}
+.bw-slot .time{font-weight:900;font-size:18px;color:var(--head)}
+.bw-slot .age{font-weight:700;font-size:13.5px;color:var(--green-dark)}
+.bw-slot .row2{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.bw-slot .price{font-weight:800;font-size:14px;color:var(--card-tx)}
+.bw-slot .free{font-weight:700;font-size:13px;color:var(--body2)}
+.bw-slot .free.low{color:#C0631E}
+.bw-slot .free.none{color:#B23A3A}
+.bw-trial{display:inline-block;background:var(--chip-bg);color:var(--chip-tx);border:1px solid var(--chip-bd);border-radius:999px;font-size:11px;font-weight:800;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.bw-hint{text-align:center;color:var(--body2);padding:24px}
+.bf-summary{background:var(--bg-alt);border:1px solid var(--card-bd);border-radius:13px;padding:12px 14px;font-weight:700;color:var(--head);margin-bottom:16px;font-size:15px}
+.bf-msg{margin-top:12px;font-weight:700;text-align:center;font-size:15px}
+.bf-msg.ok{color:var(--green-dark)} .bf-msg.err{color:#B23A3A}
 
 /* лид-магнит */
 .leadmag{background:#FFFCF2;border:1.5px solid #F0E2B8;border-radius:28px;padding:44px 36px;text-align:center;margin-top:8px}
@@ -433,23 +462,27 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 <section class="bg-alt" id="booking">
   <div class="wrap" style="max-width:980px">
     <h2 class="h2">Выбрать двор и записаться</h2>
-    <p class="lead">Двор → дата → время → оплата. Всё в несколько кликов.</p>
-    <div class="booking">
-      <div class="widget-ph">
-        <div class="big">📅</div>
-        <div>Виджет записи</div>
-        <div style="font-weight:600;font-size:14px;color:var(--body2)">двор → дата → время → оплата</div>
-      </div>
-      <form class="form-card" id="bookingForm" novalidate>
-        <h3>Не получается выбрать? Оставьте заявку</h3>
-        <div class="field"><label>Имя родителя</label><input name="parent" required></div>
-        <div class="field"><label>Телефон</label><input name="phone" type="tel" required></div>
-        <div class="field"><label>Имя и возраст ребёнка</label><input name="child" required></div>
-        <div class="field"><label>Двор или район</label><input name="yard"></div>
-        <label class="check"><input type="checkbox" name="agree" required><span>Согласен(на) на обработку персональных данных</span></label>
-        <button class="btn" type="submit" style="width:100%">Записаться</button>
-      </form>
+    <p class="lead">Двор → дата → время → запись. Всё в несколько кликов.</p>
+
+    <!-- живой виджет расписания -->
+    <div id="bw">
+      <div id="bw-locs" class="bw-locs"></div>
+      <div id="bw-meta" class="bw-meta"></div>
+      <div id="bw-slots" class="bw-slots"><div class="bw-hint">Загружаем расписание…</div></div>
     </div>
+
+    <!-- форма записи (появляется после выбора занятия) -->
+    <form class="form-card" id="bookingForm" hidden novalidate style="max-width:560px;margin:24px auto 0">
+      <div id="bf-summary" class="bf-summary"></div>
+      <div class="field"><label>Имя родителя</label><input name="parent_name" required></div>
+      <div class="field"><label>Телефон</label><input name="phone" type="tel" inputmode="tel" placeholder="+7 ___ ___-__-__" required></div>
+      <div class="field"><label>Имя ребёнка</label><input name="child_name" required></div>
+      <div class="field"><label>Возраст ребёнка</label><input name="child_age" type="number" min="3" max="12"></div>
+      <label class="check"><input type="checkbox" name="consent_pd" required><span>Согласие на обработку <a href="#" target="_blank">персональных данных</a></span></label>
+      <label class="check"><input type="checkbox" name="consent_offer" required><span>Согласие с условиями <a href="#" target="_blank">договора-оферты</a></span></label>
+      <button class="btn" type="submit" style="width:100%">Записаться</button>
+      <div id="bf-msg" class="bf-msg"></div>
+    </form>
   </div>
 </section>
 
@@ -553,15 +586,126 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   if(first) first.style.maxHeight = first.scrollHeight + 'px';
 })();
 
-// Формы – заглушки (Фаза 1). Реальная отправка подключается в Фазе 2/3.
-['bookingForm','leadForm'].forEach(function(id){
-  var f = document.getElementById(id);
-  if(!f) return;
-  f.addEventListener('submit', function(e){
+// ===== живой виджет записи =====
+(function(){
+  var API='https://begom-api.xenonline77.workers.dev';
+  var bwLocs=document.getElementById('bw-locs');
+  var bwMeta=document.getElementById('bw-meta');
+  var bwSlots=document.getElementById('bw-slots');
+  var form=document.getElementById('bookingForm');
+  var summary=document.getElementById('bf-summary');
+  var msg=document.getElementById('bf-msg');
+  if(!bwLocs) return;
+
+  var data=null, locId=null, sel=null;
+  var fmtDay=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'long',day:'numeric',month:'long'});
+  var fmtTime=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',hour:'2-digit',minute:'2-digit'});
+  var dayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit'});
+  var esc=function(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var rub=function(k){return k===0?'Бесплатно':(k/100)+' ₽'};
+
+  function load(){
+    fetch(API+'/api/schedule').then(function(r){return r.json()}).then(function(j){
+      data=j;
+      if(!j.locations||!j.locations.length){bwSlots.innerHTML='<div class="bw-hint">Расписание скоро появится.</div>';return;}
+      if(!data.locations.some(function(l){return l.id===locId})) locId=j.locations[0].id;
+      renderLocs(); renderSlots();
+    }).catch(function(){bwSlots.innerHTML='<div class="bw-hint">Не удалось загрузить расписание. Обновите страницу.</div>';});
+  }
+
+  function renderLocs(){
+    bwLocs.innerHTML='';
+    data.locations.forEach(function(l){
+      var b=document.createElement('button');
+      b.type='button';
+      b.className='bw-loc'+(l.id===locId?' active':'');
+      b.textContent=l.title;
+      b.onclick=function(){locId=l.id; sel=null; form.hidden=true; renderLocs(); renderSlots();};
+      bwLocs.appendChild(b);
+    });
+  }
+
+  function renderSlots(){
+    var loc=data.locations.find(function(l){return l.id===locId});
+    var bits=[];
+    if(loc.yard_type) bits.push('<span class="pill">'+esc(loc.yard_type)+' двор</span>');
+    if(loc.access_note) bits.push('<span class="pill">'+esc(loc.access_note)+'</span>');
+    if(loc.surface) bits.push('<span class="pill">'+esc(loc.surface)+'</span>');
+    bwMeta.innerHTML=bits.join('');
+
+    var sess=data.sessions.filter(function(s){return s.location_id===locId});
+    if(!sess.length){bwSlots.innerHTML='<div class="bw-hint">Для этой площадки занятий пока нет.</div>';return;}
+    var groups={};
+    sess.forEach(function(s){var k=dayKey.format(new Date(s.starts_at));(groups[k]=groups[k]||[]).push(s);});
+    var html='';
+    Object.keys(groups).sort().forEach(function(k){
+      var arr=groups[k];
+      html+='<div class="bw-day"><h4>'+fmtDay.format(new Date(arr[0].starts_at))+'</h4><div class="bw-slot-grid">';
+      arr.forEach(function(s){
+        var full=s.free<=0;
+        var freeCls=full?'none':(s.free<=3?'low':'');
+        var freeTxt=full?'мест нет':('осталось '+s.free);
+        var trial=s.kind==='trial'?'<span class="bw-trial">пробное</span>':'';
+        html+='<div class="bw-slot'+(full?' full':'')+(sel&&sel.id===s.id?' active':'')+'" data-id="'+s.id+'">'
+          +'<div class="time">'+fmtTime.format(new Date(s.starts_at))+trial+'</div>'
+          +'<div class="age">'+esc(s.age_group)+' лет</div>'
+          +'<div class="row2"><span class="price">'+rub(s.price_kopecks)+'</span><span class="free '+freeCls+'">'+freeTxt+'</span></div>'
+          +'</div>';
+      });
+      html+='</div></div>';
+    });
+    bwSlots.innerHTML=html;
+    bwSlots.querySelectorAll('.bw-slot:not(.full)').forEach(function(el){
+      el.onclick=function(){
+        sel=data.sessions.find(function(s){return s.id=== +el.getAttribute('data-id')});
+        renderSlots(); showForm(loc);
+      };
+    });
+  }
+
+  function showForm(loc){
+    summary.textContent=loc.title+' · '+fmtDay.format(new Date(sel.starts_at))+' · '+fmtTime.format(new Date(sel.starts_at))+' · '+sel.age_group+' лет · '+rub(sel.price_kopecks);
+    msg.textContent=''; msg.className='bf-msg';
+    form.hidden=false;
+    form.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  form.addEventListener('submit',function(e){
     e.preventDefault();
-    alert('Спасибо! Форма пока в режиме настройки – скоро подключим запись и оплату.');
+    if(!sel) return;
+    if(!form.consent_pd.checked||!form.consent_offer.checked){
+      msg.className='bf-msg err'; msg.textContent='Поставьте оба согласия — без них записать не можем.'; return;
+    }
+    var btn=form.querySelector('button[type=submit]'); btn.disabled=true;
+    var childName=form.child_name.value.trim();
+    var payload={session_id:sel.id,parent_name:form.parent_name.value.trim(),phone:form.phone.value.trim(),
+      child_name:childName,child_age:form.child_age.value?+form.child_age.value:null,
+      consent_pd:form.consent_pd.checked,consent_offer:form.consent_offer.checked};
+    fetch(API+'/api/book',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json().then(function(j){return{status:r.status,j:j}})})
+      .then(function(res){
+        btn.disabled=false;
+        if(res.j&&res.j.ok){
+          msg.className='bf-msg ok'; msg.textContent='Готово! Записали '+childName+'. До встречи во дворе 🙌';
+          form.reset(); load();
+        } else if(res.status===501){
+          msg.className='bf-msg err'; msg.textContent=res.j.message||'Онлайн-оплата скоро будет доступна.';
+        } else if(res.j&&res.j.error==='no_seats'){
+          msg.className='bf-msg err'; msg.textContent='Увы, места только что закончились. Выберите другое время.'; load();
+        } else if(res.j&&res.j.error==='consent_required'){
+          msg.className='bf-msg err'; msg.textContent='Нужны оба согласия.';
+        } else {
+          msg.className='bf-msg err'; msg.textContent='Не получилось записать. Проверьте поля и попробуйте ещё раз.';
+        }
+      }).catch(function(){btn.disabled=false;msg.className='bf-msg err';msg.textContent='Сеть недоступна. Попробуйте позже.';});
   });
-});
+
+  load();
+})();
+
+// лид-магнит — заглушка (подключим сбор email позже)
+(function(){var f=document.getElementById('leadForm');if(!f)return;
+  f.addEventListener('submit',function(e){e.preventDefault();alert('Спасибо! Сбор гайда скоро подключим.');});})();
 </script>
 </body>
 </html>

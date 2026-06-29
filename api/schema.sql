@@ -99,6 +99,9 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_starts ON sessions(starts_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_loc    ON sessions(location_id);
+-- идемпотентность материализации: один слот шаблона на дату-время
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_tpl_slot
+  ON sessions(template_id, starts_at) WHERE template_id IS NOT NULL;
 
 -- Записи — бронь места ребёнком на занятие.
 -- Занятость места = бронь в статусе 'hold' (не истёкшая) | 'paid' | 'attended'.
