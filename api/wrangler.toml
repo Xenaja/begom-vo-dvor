@@ -1,0 +1,13 @@
+name = "begom-api"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# База D1 (database_id подставим после `wrangler d1 create begom`)
+[[d1_databases]]
+binding = "DB"
+database_name = "begom"
+database_id = "5c8692ce-acac-4a76-ba50-276bd7abe661"
+
+# Резерв места без оплаты держим столько минут (истёкшие — освобождаются)
+[vars]
+HOLD_MINUTES = "15"

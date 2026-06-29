@@ -9,3 +9,10 @@ desktop.ini
 
 # scratch
 *.log
+
+# node / wrangler
+node_modules/
+.wrangler/
+api/.wrangler/
+api/node_modules/
+.dev.vars
