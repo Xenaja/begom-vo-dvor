@@ -195,8 +195,8 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .bw-loc.active{background:var(--green);border-color:var(--green);color:#fff}
 .bw-day{margin-bottom:22px}
 .bw-day h4{font-family:'Nunito';font-weight:800;font-size:15px;color:var(--head);text-transform:capitalize;margin-bottom:12px;text-align:center}
-.bw-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.bw-slot{display:flex;flex-direction:column;gap:4px;background:#fff;border:1.5px solid var(--card-bd);border-radius:16px;padding:14px 16px;cursor:pointer;transition:.15s;text-align:left}
+.bw-slot-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.bw-slot{flex:0 1 240px;display:flex;flex-direction:column;gap:4px;background:#fff;border:1.5px solid var(--card-bd);border-radius:16px;padding:14px 16px;cursor:pointer;transition:.15s;text-align:left}
 .bw-slot:hover:not(.full){border-color:var(--green);transform:translateY(-2px)}
 .bw-slot.active{border-color:var(--green);box-shadow:0 0 0 3px rgba(124,179,66,.18)}
 .bw-slot.full{opacity:.55;cursor:not-allowed}
