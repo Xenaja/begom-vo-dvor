@@ -193,8 +193,6 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .bw-loc{cursor:pointer;background:#fff;border:1.5px solid var(--stat-bd);border-radius:999px;padding:11px 22px;font-weight:800;font-size:15.5px;color:var(--card-tx);transition:.15s}
 .bw-loc:hover{border-color:var(--green)}
 .bw-loc.active{background:var(--green);border-color:var(--green);color:#fff}
-.bw-meta{text-align:center;color:var(--body2);font-size:14.5px;font-weight:600;margin-bottom:22px;min-height:20px}
-.bw-meta .pill{display:inline-block;background:#fff;border:1px solid var(--card-bd);border-radius:999px;padding:4px 12px;margin:0 4px}
 .bw-day{margin-bottom:22px}
 .bw-day h4{font-family:'Nunito';font-weight:800;font-size:15px;color:var(--head);text-transform:capitalize;margin-bottom:12px;text-align:center}
 .bw-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
@@ -467,8 +465,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     <!-- живой виджет расписания -->
     <div id="bw">
       <div id="bw-locs" class="bw-locs"></div>
-      <div id="bw-meta" class="bw-meta"></div>
-      <div id="bw-slots" class="bw-slots"><div class="bw-hint">Загружаем расписание…</div></div>
+      <div id="bw-slots" class="bw-slots" style="margin-top:22px"><div class="bw-hint">Загружаем расписание…</div></div>
     </div>
 
     <!-- форма записи (появляется после выбора занятия) -->
@@ -590,7 +587,6 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 (function(){
   var API='https://begom-api.xenonline77.workers.dev';
   var bwLocs=document.getElementById('bw-locs');
-  var bwMeta=document.getElementById('bw-meta');
   var bwSlots=document.getElementById('bw-slots');
   var form=document.getElementById('bookingForm');
   var summary=document.getElementById('bf-summary');
@@ -627,12 +623,6 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 
   function renderSlots(){
     var loc=data.locations.find(function(l){return l.id===locId});
-    var bits=[];
-    if(loc.yard_type) bits.push('<span class="pill">'+esc(loc.yard_type)+' двор</span>');
-    if(loc.access_note) bits.push('<span class="pill">'+esc(loc.access_note)+'</span>');
-    if(loc.surface) bits.push('<span class="pill">'+esc(loc.surface)+'</span>');
-    bwMeta.innerHTML=bits.join('');
-
     var sess=data.sessions.filter(function(s){return s.location_id===locId});
     if(!sess.length){bwSlots.innerHTML='<div class="bw-hint">Для этой площадки занятий пока нет.</div>';return;}
     var groups={};
