@@ -45,9 +45,15 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 .h2{font-size:40px;text-align:center}
 .lead{max-width:560px;margin:16px auto 0;text-align:center;color:var(--body2);font-size:18px}
 
-/* браш-подчёркивание под словом */
-.brush{position:relative;display:inline-block}
-.brush svg{position:absolute;left:-2%;bottom:-4px;width:114%;height:.5em;z-index:-1}
+/* браш-подчёркивание под словом (per-line, корректно переносится) */
+.brush{
+  display:inline;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 15' preserveAspectRatio='none'%3E%3Cpath d='M4 9C50 4 150 4 196 7 198 12 188 14 150 13 90 15 40 14 6 13 2 11 2 10 4 9Z' fill='%23B6D67E'/%3E%3C/svg%3E") no-repeat 0 100%;
+  background-size:100% .42em;
+  padding-bottom:.12em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+.brush svg{display:none}
 
 /* кнопки */
 .btn{
