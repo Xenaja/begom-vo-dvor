@@ -111,7 +111,54 @@ async function upsertClient(db, { phone, name, consent_pd, consent_offer, source
   return ins.meta.last_row_id;
 }
 
-async function book(db, body) {
+// ---------- Т-Банк (Т-Касса) эквайринг ----------
+async function sha256hex(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+// Токен = SHA256 от значений корневых скалярных полей + Password, отсортированных по ключу.
+async function tbankToken(params, password) {
+  const entries = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && typeof v !== 'object');
+  entries.push(['Password', password]);
+  entries.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  const concat = entries
+    .map(([, v]) => (typeof v === 'boolean' ? (v ? 'true' : 'false') : String(v)))
+    .join('');
+  return sha256hex(concat);
+}
+async function tbankInit(env, { orderId, amount, description, phone, email }) {
+  const root = {
+    TerminalKey: env.TBANK_TERMINAL,
+    Amount: amount,
+    OrderId: orderId,
+    Description: description,
+    NotificationURL: env.API_URL + '/api/payment/notify',
+    SuccessURL: env.SITE_URL + '/?payment=success#booking',
+    FailURL: env.SITE_URL + '/?payment=fail#booking',
+  };
+  const Token = await tbankToken(root, env.TBANK_PASSWORD);
+  const reqBody = {
+    ...root, Token,
+    Receipt: {
+      Taxation: env.TAXATION || 'usn_income',
+      Phone: phone,
+      ...(email ? { Email: email } : {}),
+      Items: [{
+        Name: description.slice(0, 128),
+        Price: amount, Quantity: 1, Amount: amount,
+        Tax: 'none', PaymentMethod: 'full_payment', PaymentObject: 'service',
+      }],
+    },
+  };
+  const r = await fetch('https://securepay.tinkoff.ru/v2/Init', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(reqBody),
+  });
+  return r.json();
+}
+
+async function book(env, body) {
+  const db = env.DB;
   const b = body || {};
   if (!b.session_id || !b.parent_name || !b.phone || !b.child_name)
     return json({ error: 'missing_fields' }, 400);
@@ -127,8 +174,7 @@ async function book(db, body) {
     phone: b.phone, name: b.parent_name, consent_pd: b.consent_pd, consent_offer: b.consent_offer,
   });
 
-  // Атомарный резерв: вставка проходит только если есть свободное место
-  // (одним стейтментом — D1 сериализует записи, овербукинг исключён).
+  // Бесплатное (пробное): атомарный резерв → сразу 'paid'.
   if (s.price_kopecks === 0) {
     const res = await db.prepare(
       `INSERT INTO bookings (session_id, client_id, child_name, child_age, status, amount_kopecks, paid_with, source, paid_at)
@@ -141,11 +187,73 @@ async function book(db, body) {
     return json({ ok: true, status: 'registered', booking_id: res.meta.last_row_id });
   }
 
-  // Платное (регулярное) — оплата Т-Банка подключается следующим шагом.
-  return json({
-    ok: false, error: 'payment_not_configured',
-    message: 'Онлайн-оплата картой скоро будет доступна. Пока запишитесь через ВК.',
-  }, 501);
+  // Платное (регулярное): резерв 'hold' на HOLD_MINUTES → платёж Т-Банка.
+  const holdMin = Number(env.HOLD_MINUTES || 15);
+  const holdExp = new Date(Date.now() + holdMin * 60000).toISOString();
+  const res = await db.prepare(
+    `INSERT INTO bookings (session_id, client_id, child_name, child_age, status, amount_kopecks, hold_expires_at, paid_with, source)
+     SELECT ?1, ?2, ?3, ?4, 'hold', ?6, ?7, 'tbank', 'web'
+     WHERE (SELECT count(*) FROM bookings bb WHERE bb.session_id=?1
+              AND (bb.status IN ('paid','attended') OR (bb.status='hold' AND bb.hold_expires_at > ?5)))
+           < (SELECT capacity FROM sessions WHERE id=?1)`
+  ).bind(b.session_id, clientId, b.child_name, b.child_age || null, nowI, s.price_kopecks, holdExp).run();
+  if (!res.meta.changes) return json({ error: 'no_seats' }, 409);
+  const bookingId = res.meta.last_row_id;
+
+  if (!env.TBANK_TERMINAL || !env.TBANK_PASSWORD) {
+    return json({ ok: false, error: 'payment_not_configured', message: 'Оплата ещё настраивается.' }, 501);
+  }
+
+  const orderId = bookingId + '-' + Date.now().toString(36);
+  await db.prepare(
+    `INSERT INTO payments (booking_id, provider, order_id, amount_kopecks, status) VALUES (?,?,?,?,'new')`
+  ).bind(bookingId, 'tbank', orderId, s.price_kopecks).run();
+
+  const desc = 'Занятие «Бегом во двор» — ' + s.age_group + ' лет';
+  let init;
+  try {
+    init = await tbankInit(env, { orderId, amount: s.price_kopecks, description: desc, phone: normPhone(b.phone) });
+  } catch (e) {
+    init = { Success: false, Message: String((e && e.message) || e) };
+  }
+  if (init && init.Success && init.PaymentURL) {
+    await db.prepare(`UPDATE payments SET provider_payment_id=?, payment_url=?, raw=? WHERE order_id=?`)
+      .bind(String(init.PaymentId), init.PaymentURL, JSON.stringify(init), orderId).run();
+    return json({ ok: true, status: 'payment', payment_url: init.PaymentURL, booking_id: bookingId });
+  }
+  // Init не удался — освобождаем место.
+  await db.prepare(`UPDATE bookings SET status='cancelled' WHERE id=?`).bind(bookingId).run();
+  await db.prepare(`UPDATE payments SET status='rejected', raw=? WHERE order_id=?`)
+    .bind(JSON.stringify(init || {}), orderId).run();
+  return json({ ok: false, error: 'init_failed', message: (init && (init.Message || init.Details)) || 'Не удалось создать платёж.' }, 502);
+}
+
+// Webhook Т-Банка: подтверждение оплаты / возврат.
+async function paymentNotify(env, body) {
+  const db = env.DB;
+  if (!body) return new Response('NO BODY', { status: 400 });
+  const recv = { ...body };
+  const token = recv.Token; delete recv.Token;
+  const calc = await tbankToken(recv, env.TBANK_PASSWORD);
+  if (calc !== token) return new Response('BAD TOKEN', { status: 400 });
+
+  const pay = await db.prepare(`SELECT * FROM payments WHERE order_id=?`).bind(String(body.OrderId)).first();
+  if (!pay) return new Response('OK');
+
+  const status = body.Status;
+  const nowI = nowIso();
+  await db.prepare(`UPDATE payments SET status=?, provider_payment_id=?, raw=? WHERE id=?`)
+    .bind(status, String(body.PaymentId || pay.provider_payment_id || ''), JSON.stringify(body), pay.id).run();
+
+  if (status === 'CONFIRMED') {
+    await db.prepare(`UPDATE payments SET confirmed_at=? WHERE id=?`).bind(nowI, pay.id).run();
+    await db.prepare(`UPDATE bookings SET status='paid', paid_with='tbank', paid_at=? WHERE id=? AND status<>'paid'`)
+      .bind(nowI, pay.booking_id).run();
+    // TODO (следующий шаг): уведомление в TG/ВК — только оплаченные брони.
+  } else if (['REJECTED', 'REFUNDED', 'REVERSED', 'PARTIAL_REFUNDED'].includes(status)) {
+    await db.prepare(`UPDATE bookings SET status='cancelled' WHERE id=?`).bind(pay.booking_id).run();
+  }
+  return new Response('OK');
 }
 
 // ---------- роутер ----------
@@ -164,7 +272,10 @@ export default {
         return json(await getSchedule(env.DB));
 
       if (pathname === '/api/book' && req.method === 'POST')
-        return book(env.DB, await req.json().catch(() => null));
+        return book(env, await req.json().catch(() => null));
+
+      if (pathname === '/api/payment/notify' && req.method === 'POST')
+        return paymentNotify(env, await req.json().catch(() => null));
 
       return json({ error: 'not_found' }, 404);
     } catch (e) {

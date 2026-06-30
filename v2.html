@@ -616,6 +616,20 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   if(!bwLocs) return;
 
   var data=null, locId=null, sel=null;
+
+  // возврат с платёжной формы Т-Банка
+  var pp=new URLSearchParams(location.search).get('payment');
+  if(pp==='success'||pp==='fail'){
+    var nb=document.createElement('div');
+    nb.className='bf-msg '+(pp==='success'?'ok':'err');
+    nb.style.cssText='text-align:center;margin:0 auto 18px;max-width:600px;font-size:16px';
+    nb.textContent=pp==='success'
+      ? 'Оплата прошла! Записали ребёнка — до встречи во дворе 🙌'
+      : 'Оплата не завершена. Можно попробовать снова — выберите занятие ниже.';
+    bwLocs.parentNode.insertBefore(nb,bwLocs);
+    setTimeout(function(){var el=document.getElementById('booking');if(el)el.scrollIntoView({behavior:'smooth'})},300);
+  }
+
   var fmtDay=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'long',day:'numeric',month:'long'});
   var fmtTime=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',hour:'2-digit',minute:'2-digit'});
   var dayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -697,17 +711,18 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       .then(function(r){return r.json().then(function(j){return{status:r.status,j:j}})})
       .then(function(res){
         btn.disabled=false;
-        if(res.j&&res.j.ok){
+        if(res.j&&res.j.payment_url){
+          msg.className='bf-msg ok'; msg.textContent='Переходим к оплате…';
+          window.location.href=res.j.payment_url; return;
+        } else if(res.j&&res.j.ok){
           msg.className='bf-msg ok'; msg.textContent='Готово! Записали '+childName+'. До встречи во дворе 🙌';
           form.reset(); load();
-        } else if(res.status===501){
-          msg.className='bf-msg err'; msg.textContent=res.j.message||'Онлайн-оплата скоро будет доступна.';
         } else if(res.j&&res.j.error==='no_seats'){
           msg.className='bf-msg err'; msg.textContent='Увы, места только что закончились. Выберите другое время.'; load();
         } else if(res.j&&res.j.error==='consent_required'){
           msg.className='bf-msg err'; msg.textContent='Нужны оба согласия.';
         } else {
-          msg.className='bf-msg err'; msg.textContent='Не получилось записать. Проверьте поля и попробуйте ещё раз.';
+          msg.className='bf-msg err'; msg.textContent=(res.j&&res.j.message)||'Не получилось записать. Попробуйте ещё раз.';
         }
       }).catch(function(){btn.disabled=false;msg.className='bf-msg err';msg.textContent='Сеть недоступна. Попробуйте позже.';});
   });
