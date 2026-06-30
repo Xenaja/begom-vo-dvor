@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Бегом во двор – командные игры на улице для детей рядом с домом</title>
-<meta name="description" content="Дворовые подвижные игры для детей 4–9 лет. Инструктор приходит в ваш двор и проводит 45 минут активных игр нашего детства. 350 ₽ за занятие.">
+<meta name="description" content="Дворовые подвижные игры для детей 5–9 лет. Инструктор приходит в ваш двор и проводит 45 минут активных игр нашего детства. 350 ₽ за занятие.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,31 +70,6 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 .btn-warm{background:var(--warm)} .btn-warm:hover{background:#d9982f}
 .btn-white{background:#fff;color:var(--green-dark)} .btn-white:hover{background:#EEF5DE;color:var(--green-dark)}
 .cta-row{text-align:center;margin-top:40px}
-
-/* ===== HERO «обложка» (v2) ===== */
-@font-face{font-family:'Dudu';src:url('assets/hero/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
-.hero2{background:#9BC158;color:#fff;overflow:hidden;position:relative;padding-top:88px}
-.hero2 .geo{position:absolute;top:26px;right:28px;display:flex;align-items:center;gap:6px;font-family:'Dudu',cursive;font-size:24px;color:#FBE27A}
-.hero2-content{max-width:1100px;margin:0 auto;padding:0 24px;text-align:center}
-.wordmark2{font-family:'Dudu',cursive;font-size:128px;line-height:.92;letter-spacing:.5px;color:#fff;text-shadow:0 3px 14px rgba(80,110,30,.18)}
-.subtitle2{font-family:'Dudu',cursive;font-size:28px;text-transform:uppercase;letter-spacing:3px;line-height:1.3;margin-top:18px}
-.subtitle2 .accent{color:#FBE27A}
-.btn2{display:inline-block;margin-top:30px;background:#fff;color:#5E8C24;font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;border-radius:999px;padding:15px 34px;box-shadow:0 10px 24px rgba(80,110,30,.18);transition:.18s}
-.btn2:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(80,110,30,.26)}
-.hero2-dudles{max-width:1180px;margin:42px auto 0;padding:0 24px 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
-.hero2-dudles img{width:auto}
-.hero2-dudles .snar{height:60px;margin-bottom:8px}
-.hero2-dudles .kid{height:84px}
-@media(max-width:920px){
-  .wordmark2{font-size:74px}.subtitle2{font-size:21px}
-  .hero2-dudles .snar{height:46px}.hero2-dudles .kid{height:60px}
-}
-@media(max-width:600px){
-  .wordmark2{font-size:52px}.subtitle2{font-size:16px;letter-spacing:1px}
-  .hero2 .geo{font-size:18px;top:16px;right:16px}
-  .hero2-dudles{flex-wrap:wrap;justify-content:center;gap:14px}
-  .hero2-dudles .snar{height:38px}.hero2-dudles .kid{height:46px}
-}
 
 /* анимация всплывания */
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -164,15 +139,12 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .pain-close{text-align:center;max-width:680px;margin:28px auto 0;color:var(--body2)}
 
 /* во что играем */
-.games{background:linear-gradient(160deg,#7CB342,#73A838);color:#fff;overflow:hidden}
+.games{background:#9BC158;color:#fff;overflow:hidden}
 .games h2{color:#fff;font-size:42px;text-align:center}
-.games .game-list{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 34px;max-width:720px;margin:30px auto 0}
-.games .game{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:#fff}
-.games .game-extra{width:100%;text-align:center;font-style:italic;font-weight:500;opacity:.92;margin-top:4px}
-.games .weather{text-align:center;margin-top:28px;font-weight:600;opacity:.95}
-.games .decor{position:absolute;inset:0;pointer-events:none;opacity:.16}
+.games-lead{text-align:center;font-weight:700;font-size:19px;max-width:620px;margin:22px auto 0;line-height:1.5}
+.games-weather{font-weight:800;opacity:.96;margin-top:14px}
+.games .decor{position:absolute;inset:0;pointer-events:none;opacity:.22}
 .games .decor img{position:absolute;width:80px}
-.games .decor .cloud{position:absolute}
 
 /* основательница */
 .founder{display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:center;margin-top:36px}
@@ -306,25 +278,30 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 </header>
 
 <!-- HERO -->
-<section class="hero2" id="top">
-  <a class="geo" href="#top">
-    <svg width="20" viewBox="0 0 24 24" fill="#FBE27A" aria-hidden="true"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.6a2.6 2.6 0 110-5.2 2.6 2.6 0 010 5.2z"/></svg>
-    <span>Санкт-Петербург</span>
-  </a>
-  <div class="hero2-content">
-    <div class="wordmark2">Бегом во двор</div>
-    <div class="subtitle2">Дружба и игры во дворе,<br>как <span class="accent">в нашем детстве</span></div>
-    <a class="btn2" href="#booking">Записать ребёнка</a>
-  </div>
-  <div class="hero2-dudles">
-    <img class="kid bob"   src="assets/hero/kid-ball-white.png"   alt="ребёнок с мячом">
-    <img class="snar bob-2" src="assets/hero/volleyball.png"      alt="волейбольный мяч">
-    <img class="snar bob-3" src="assets/hero/racket.png"          alt="ракетка">
-    <img class="snar bob-4" src="assets/hero/football.png"        alt="мяч">
-    <img class="kid bob-2" src="assets/hero/kid-rope-white.png"   alt="девочка со скакалкой">
-    <img class="snar bob-3" src="assets/hero/frisbee.png"         alt="фрисби">
-    <img class="snar bob"   src="assets/hero/shuttlecock.png"     alt="волан">
-    <img class="kid bob-4" src="assets/hero/kid-racket-white.png" alt="ребёнок с ракеткой">
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-decor">
+      <svg class="cloud bob" style="top:6%;right:30%" viewBox="0 0 64 36" fill="none" stroke="#CBCEC2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
+      <svg class="star bob-2" style="top:18%;right:8%" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>
+      <svg class="cloud bob-3" style="top:40%;right:20%;width:48px" viewBox="0 0 64 36" fill="none" stroke="#D2D5C9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
+      <svg class="star bob-4" style="top:2%;right:14%;width:20px" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <div class="wordmark">Бегом во двор</div>
+        <h1>Подвижные игры на улице для детей рядом с домом</h1>
+        <p class="hero-meta">350 ₽ · 45 минут · 5–6 и 7–9 лет</p>
+        <a class="trial" href="#booking"><span class="dot"></span>Пробные занятия – 11 и 12 июля</a>
+        <div class="hero-cta">
+          <a class="btn btn-hero" href="#booking">Записать ребёнка</a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="glow"></div>
+        <img src="assets/kids-trio.png" alt="Дети играют во дворе">
+        <img class="frisbee bob-2" src="assets/frisbee.png" alt="">
+      </div>
+    </div>
   </div>
 </section>
 
@@ -350,7 +327,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     <div class="grid g4">
       <div class="stat"><svg class="star-badge" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg><div class="num">45 минут</div><p>ребёнок играет на улице под присмотром</p></div>
       <div class="stat"><svg class="star-badge" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg><div class="num">350 ₽</div><p>стоимость одного занятия, единая цена для всех площадок</p></div>
-      <div class="stat"><svg class="star-badge" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg><div class="num">4–6 и 7–9 лет</div><p>группы и игры подобраны под возраст детей</p></div>
+      <div class="stat"><svg class="star-badge" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg><div class="num">5–6 и 7–9 лет</div><p>группы и игры подобраны под возраст детей</p></div>
       <div class="stat"><svg class="star-badge" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg><div class="num">Рядом с домом</div><p>занятия проходят в вашем дворе и ближайших парках</p></div>
     </div>
   </div>
@@ -373,6 +350,17 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   </div>
 </section>
 
+<!-- БЛИЖАЙШАЯ ИГРА / CTA -->
+<section class="final">
+  <img class="kid-l bob" src="assets/kid-ball.png" alt="">
+  <img class="kid-r bob-3" src="assets/kid-racket.png" alt="">
+  <div class="wrap narrow-s" style="position:relative;z-index:2">
+    <h2>Ближайшая игра – уже <span class="brush">в вашем дворе<svg viewBox="0 0 200 15" preserveAspectRatio="none"><path d="M4 9C50 4 150 4 196 7 198 12 188 14 150 13 90 15 40 14 6 13 2 11 2 10 4 9Z" fill="#B6D67E"/></svg></span></h2>
+    <p>Выберите площадку рядом с домом – и подарите ребёнку радость подвижных игр во дворе.</p>
+    <a class="btn btn-hero" href="#booking">Пробные занятия</a>
+  </div>
+</section>
+
 <!-- ДЛЯ КОГО / БОЛИ -->
 <section>
   <div class="wrap narrow">
@@ -391,36 +379,16 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 <!-- ВО ЧТО ИГРАЕМ -->
 <section class="games" id="games">
   <div class="decor">
-    <svg class="cloud bob" style="top:10%;left:8%;width:84px" viewBox="0 0 64 36" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
-    <img class="bob-3" src="assets/football.png" style="top:8%;right:9%" alt="">
-    <svg class="cloud bob-2" style="bottom:12%;right:12%;width:70px" viewBox="0 0 64 36" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
-    <img class="bob-4" src="assets/frisbee.png" style="bottom:10%;left:10%" alt="">
+    <img class="bob"   src="assets/hero/football.png"    style="top:10%;left:7%;width:64px" alt="">
+    <img class="bob-3" src="assets/hero/racket.png"      style="top:13%;right:8%;width:74px" alt="">
+    <img class="bob-2" src="assets/hero/volleyball.png"  style="bottom:16%;left:11%;width:58px" alt="">
+    <img class="bob-4" src="assets/hero/frisbee.png"     style="bottom:14%;right:11%;width:64px" alt="">
+    <img class="bob-3" src="assets/hero/shuttlecock.png" style="top:44%;left:47%;width:48px" alt="">
   </div>
   <div class="wrap narrow-s" style="position:relative;z-index:2">
     <h2>Поиграем?</h2>
-    <div class="game-list">
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>вышибалы</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>резиночка</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>третий лишний</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>классики</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>казаки-разбойники</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>12 палочек</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>хвостики</span>
-      <span class="game"><svg width="18" viewBox="0 0 24 24" fill="#FCE16B" stroke="#2B2A26" stroke-width="1.5"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>али-баба</span>
-      <span class="game-extra">и другие игры нашего детства</span>
-    </div>
-    <p class="weather">❄️ Зимой – снежные забавы. Играем почти в любую погоду.</p>
-  </div>
-</section>
-
-<!-- БЛИЖАЙШАЯ ИГРА / CTA -->
-<section class="final">
-  <img class="kid-l bob" src="assets/kid-ball.png" alt="">
-  <img class="kid-r bob-3" src="assets/kid-racket.png" alt="">
-  <div class="wrap narrow-s" style="position:relative;z-index:2">
-    <h2>Ближайшая игра – уже <span class="brush">в вашем дворе<svg viewBox="0 0 200 15" preserveAspectRatio="none"><path d="M4 9C50 4 150 4 196 7 198 12 188 14 150 13 90 15 40 14 6 13 2 11 2 10 4 9Z" fill="#B6D67E"/></svg></span></h2>
-    <p>Выберите площадку рядом с домом – и подарите ребёнку вечер живых дворовых игр.</p>
-    <a class="btn btn-hero" href="#booking">Пробные занятия</a>
+    <p class="games-lead">В нашем запасе более 100 разнообразных подвижных игр для детей — скучать не придётся.</p>
+    <p class="games-lead games-weather">Играем на свежем воздухе почти в любую погоду! ☀️</p>
   </div>
 </section>
 
@@ -433,7 +401,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       <div>
         <h3>Привет! Меня зовут Ксения</h3>
         <p>Я хотела вернуть детям то, что было у нас – живые дворовые игры, друзей и движение вместо экранов.</p>
-        <p>Так появился проект «Бегом во двор», где инструктор приходит прямо в ваш двор и занимает детей активными уличными играми рядом с домом.</p>
+        <p>Проектом «Бегом во двор» очень хочется подарить детям ощущение беззаботного детства через живые эмоции. Хочется объединить их не в соцсетях, а на площадке, чтобы в каждой игре они находили не соперника, а друга, и чтобы их искренние улыбки озаряли каждый двор!</p>
       </div>
     </div>
   </div>
@@ -566,7 +534,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       <span class="footer-mark">Бегом во двор</span>
     </div>
     <div class="footer-contacts">
-      <a href="https://vk.ru/club239404587" target="_blank" rel="noopener">Написать в ВК →</a>
+      <a href="https://vk.ru/club239404587" target="_blank" rel="noopener">Написать в ВК</a>
       <a href="mailto:begomvodvor@mail.ru">begomvodvor@mail.ru</a>
     </div>
     <div class="footer-bottom">
