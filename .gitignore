@@ -16,3 +16,6 @@ node_modules/
 api/.wrangler/
 api/node_modules/
 .dev.vars
+
+# большой бандл-референс в корне (есть в handoff_hero_oblozhka/)
+/Бегом во двор - Hero обложка.html
