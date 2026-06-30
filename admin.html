@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Бегом во двор — админка</title>
+<style>
+  :root{--green:#7CB342;--dark:#2F3A22;--bd:#E4E2D8;--bg:#F6FAEE;--muted:#6B675E}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;color:#2B2A26;background:#fff;font-size:15px}
+  header{background:var(--dark);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  header b{font-size:17px}
+  header button{background:#52613a;color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tabs button{background:var(--bg);border:1px solid var(--bd);border-radius:999px;padding:9px 18px;cursor:pointer;font-weight:700;font-size:14px}
+  .tabs button.active{background:var(--green);border-color:var(--green);color:#fff}
+  h2{font-size:19px;margin:22px 0 10px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #EFEDE5;font-size:14px;vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .card{border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:16px;background:#fff}
+  .sess-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+  .sess-head .t{font-weight:800}
+  .badge{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+  .b-paid{background:#E6F2D6;color:#3f6d18}.b-hold{background:#FFF3D6;color:#8A6314}
+  .b-attended{background:#D6EBF2;color:#1d5a6e}.b-no_show{background:#F2Dede;color:#9a3b3b}
+  .b-trial{background:#FFF3D6;color:#8A6314}
+  input,select{font:inherit;font-size:14px;border:1.5px solid var(--bd);border-radius:8px;padding:7px 9px;outline:none}
+  input:focus,select:focus{border-color:var(--green)}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+  .row label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn.sm{padding:5px 10px;font-size:13px}
+  .btn.gray{background:#8a8f80}.btn.red{background:#b85c5c}.btn.blue{background:#3f87a6}
+  .muted{color:var(--muted)} .right{text-align:right}
+  #login{max-width:340px;margin:80px auto;text-align:center}
+  #login input{width:100%;margin:12px 0;text-align:center}
+  .hidden{display:none}
+  .hint{font-size:13px;color:var(--muted);margin:4px 0 12px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h2>Админка «Бегом во двор»</h2>
+  <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
+  <button class="btn" id="loginBtn" style="width:100%">Войти</button>
+  <div id="loginErr" class="muted" style="margin-top:10px;color:#b85c5c"></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <b>Бегом во двор · админка</b>
+    <button id="logout">Выйти</button>
+  </header>
+  <div class="wrap">
+    <div class="tabs">
+      <button data-tab="bookings" class="active">Записи</button>
+      <button data-tab="schedule">Расписание</button>
+      <button data-tab="instructors">Инструкторы</button>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<script>
+var API='https://begom-api.xenonline77.workers.dev';
+var KEY=localStorage.getItem('bvd_admin_key')||'';
+var DATA=null, TAB='bookings';
+
+var WD=['', 'Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+var fmtDT=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+var fmtT=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',hour:'2-digit',minute:'2-digit'});
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var rub=function(k){return (k/100)+' ₽'};
+
+function api(path,method,body){
+  return fetch(API+path,{method:method||'GET',headers:{'content-type':'application/json','x-admin-key':KEY},
+    body:body?JSON.stringify(body):undefined}).then(function(r){
+    if(r.status===401){logout();throw new Error('unauth');}
+    return r.json();
+  });
+}
+function load(){return api('/api/admin/data').then(function(d){DATA=d;render();});}
+function save(table,row){return api('/api/admin/upsert','POST',{table:table,row:row}).then(load);}
+function setBooking(id,status){return api('/api/admin/booking','POST',{id:id,status:status}).then(load);}
+
+// ---- логин ----
+function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
+function logout(){localStorage.removeItem('bvd_admin_key');location.reload();}
+document.getElementById('logout').onclick=logout;
+document.getElementById('loginBtn').onclick=function(){
+  KEY=document.getElementById('pw').value.trim();
+  localStorage.setItem('bvd_admin_key',KEY);
+  api('/api/admin/data').then(function(d){DATA=d;showApp();render();})
+    .catch(function(){document.getElementById('loginErr').textContent='Неверный пароль';});
+};
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginBtn').click();});
+
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.onclick=function(){TAB=b.getAttribute('data-tab');
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');render();};
+});
+
+// ---- рендер ----
+function render(){
+  if(!DATA)return;
+  var v=document.getElementById('view');
+  if(TAB==='bookings')v.innerHTML=renderBookings();
+  else if(TAB==='schedule')v.innerHTML=renderSchedule();
+  else v.innerHTML=renderInstructors();
+  bindActions();
+}
+
+function locName(id){var l=DATA.locations.find(function(x){return x.id===id});return l?l.title:'—';}
+function instOptions(sel){
+  var o='<option value="">— инструктор —</option>';
+  DATA.instructors.filter(function(i){return i.active}).forEach(function(i){
+    o+='<option value="'+i.id+'"'+(sel===i.id?' selected':'')+'>'+esc(i.name)+'</option>';});
+  return o;
+}
+
+function renderBookings(){
+  var byS={}; DATA.bookings.forEach(function(b){(byS[b.session_id]=byS[b.session_id]||[]).push(b);});
+  var sess=DATA.sessions.filter(function(s){return s.status!=='cancelled'});
+  var html='<h2>Записи на ближайшие занятия</h2><div class="hint">Показаны занятия с сегодняшнего дня. ✓ пришёл / ✗ не пришёл / отменить.</div>';
+  var any=false;
+  sess.forEach(function(s){
+    var bk=byS[s.id]||[];
+    var active=bk.filter(function(b){return b.status!=='cancelled'});
+    if(!active.length)return;
+    any=true;
+    var occ=active.filter(function(b){return b.status==='paid'||b.status==='attended'||b.status==='hold'}).length;
+    html+='<div class="card"><div class="sess-head"><span class="t">'+fmtDT.format(new Date(s.starts_at))
+      +' · '+esc(s.loc_title)+' · '+esc(s.age_group)+' лет'
+      +(s.kind==='trial'?' <span class="badge b-trial">пробное</span>':'')+'</span>'
+      +'<span class="muted">'+occ+'/'+s.capacity+' мест</span></div>';
+    html+='<table><tr><th>Ребёнок</th><th>Родитель</th><th>Телефон</th><th>Оплата</th><th>Статус</th><th></th></tr>';
+    active.forEach(function(b){
+      html+='<tr><td>'+esc(b.child_name)+(b.child_age?(', '+b.child_age):'')+'</td><td>'+esc(b.parent_name)+'</td>'
+        +'<td>'+esc(b.phone)+'</td><td>'+(b.amount_kopecks>0?rub(b.amount_kopecks):'беспл.')+'</td>'
+        +'<td><span class="badge b-'+b.status+'">'+statusRu(b.status)+'</span></td>'
+        +'<td class="right">'
+        +'<button class="btn sm blue" data-bk="'+b.id+'" data-st="attended">✓</button> '
+        +'<button class="btn sm gray" data-bk="'+b.id+'" data-st="no_show">✗</button> '
+        +'<button class="btn sm red" data-bk="'+b.id+'" data-st="cancelled">×</button></td></tr>';
+    });
+    html+='</table></div>';
+  });
+  if(!any)html+='<p class="muted">Активных записей пока нет.</p>';
+  return html;
+}
+function statusRu(s){return {paid:'оплачено',hold:'резерв',attended:'пришёл',no_show:'не пришёл',cancelled:'отменён'}[s]||s;}
+
+function renderSchedule(){
+  var html='<h2>Локации</h2><table><tr><th>Название</th><th>Тип</th><th>Доступ</th><th>Покрытие</th><th>Активна</th></tr>';
+  DATA.locations.forEach(function(l){
+    html+='<tr><td>'+esc(l.title)+'</td><td>'+esc(l.yard_type)+'</td><td>'+esc(l.access_note)+'</td><td>'+esc(l.surface)+'</td>'
+      +'<td><button class="btn sm '+(l.active?'':'gray')+'" data-loc-toggle="'+l.id+'" data-active="'+(l.active?0:1)+'">'+(l.active?'да':'нет')+'</button></td></tr>';
+  });
+  html+='</table>'
+    +'<div class="card"><b>Добавить локацию</b><div class="row">'
+    +'<input id="loc-title" placeholder="ЖК / двор"><input id="loc-yard" placeholder="тип (открытый/закрытый)">'
+    +'<input id="loc-access" placeholder="доступ"><input id="loc-surface" placeholder="покрытие">'
+    +'<button class="btn" id="loc-add">Добавить</button></div></div>';
+
+  html+='<h2>Регулярное расписание (шаблоны)</h2><div class="hint">Из шаблонов автоматически создаются занятия на 4 недели вперёд.</div>';
+  html+='<table><tr><th>Двор</th><th>День</th><th>Время</th><th>Группа</th><th>Мест</th><th>Цена</th><th>Инструктор</th><th>Активен</th></tr>';
+  DATA.templates.forEach(function(t){
+    html+='<tr><td>'+esc(locName(t.location_id))+'</td><td>'+WD[t.weekday]+'</td><td>'+esc(t.time_msk)+'</td>'
+      +'<td>'+esc(t.age_group)+'</td><td>'+t.capacity+'</td><td>'+rub(t.price_kopecks)+'</td>'
+      +'<td><select data-tpl-inst="'+t.id+'">'+instOptions(t.instructor_id)+'</select></td>'
+      +'<td><button class="btn sm '+(t.active?'':'gray')+'" data-tpl-toggle="'+t.id+'" data-active="'+(t.active?0:1)+'">'+(t.active?'да':'нет')+'</button></td></tr>';
+  });
+  html+='</table>'
+    +'<div class="card"><b>Добавить шаблон</b><div class="row">'
+    +'<label>Двор<select id="tpl-loc">'+DATA.locations.map(function(l){return '<option value="'+l.id+'">'+esc(l.title)+'</option>'}).join('')+'</select></label>'
+    +'<label>День<select id="tpl-wd"><option value="1">Пн</option><option value="2">Вт</option><option value="3">Ср</option><option value="4">Чт</option><option value="5">Пт</option><option value="6">Сб</option><option value="7">Вс</option></select></label>'
+    +'<label>Время<input id="tpl-time" placeholder="10:00" size="5"></label>'
+    +'<label>Группа<select id="tpl-age"><option>5-6</option><option>7-9</option></select></label>'
+    +'<label>Мест<input id="tpl-cap" type="number" value="12" size="3"></label>'
+    +'<label>Цена ₽<input id="tpl-price" type="number" value="350" size="4"></label>'
+    +'<button class="btn" id="tpl-add">Добавить</button></div></div>';
+
+  html+='<h2>Разовые занятия (напр. пробные)</h2>';
+  var oneoff=DATA.sessions.filter(function(s){return !s.template_id && s.status!=='cancelled'});
+  html+='<table><tr><th>Когда</th><th>Двор</th><th>Группа</th><th>Тип</th><th>Мест</th><th>Цена</th><th>Инструктор</th><th></th></tr>';
+  oneoff.forEach(function(s){
+    html+='<tr><td>'+fmtDT.format(new Date(s.starts_at))+'</td><td>'+esc(s.loc_title)+'</td><td>'+esc(s.age_group)+'</td>'
+      +'<td>'+(s.kind==='trial'?'пробное':'разовое')+'</td><td>'+s.capacity+'</td><td>'+rub(s.price_kopecks)+'</td>'
+      +'<td><select data-sess-inst="'+s.id+'">'+instOptions(s.instructor_id)+'</select></td>'
+      +'<td class="right"><button class="btn sm red" data-sess-close="'+s.id+'">закрыть</button></td></tr>';
+  });
+  html+='</table>'
+    +'<div class="card"><b>Добавить разовое занятие</b><div class="row">'
+    +'<label>Двор<select id="ss-loc">'+DATA.locations.map(function(l){return '<option value="'+l.id+'">'+esc(l.title)+'</option>'}).join('')+'</select></label>'
+    +'<label>Дата<input id="ss-date" type="date"></label>'
+    +'<label>Время<input id="ss-time" placeholder="10:00" size="5"></label>'
+    +'<label>Группа<select id="ss-age"><option>5-6</option><option>7-9</option></select></label>'
+    +'<label>Мест<input id="ss-cap" type="number" value="12" size="3"></label>'
+    +'<label>Цена ₽<input id="ss-price" type="number" value="0" size="4"></label>'
+    +'<label>Тип<select id="ss-kind"><option value="trial">пробное</option><option value="regular">разовое</option></select></label>'
+    +'<button class="btn" id="ss-add">Добавить</button></div></div>';
+  return html;
+}
+
+function renderInstructors(){
+  var html='<h2>Инструкторы</h2><div class="hint">«Убрать» — скрывает инструктора (история сохраняется).</div>';
+  html+='<table><tr><th>Имя</th><th>Опыт (строка)</th><th>Активен</th><th></th></tr>';
+  DATA.instructors.forEach(function(i){
+    html+='<tr><td>'+esc(i.name)+'</td><td>'+esc(i.experience)+'</td>'
+      +'<td><span class="badge '+(i.active?'b-paid':'b-no_show')+'">'+(i.active?'да':'нет')+'</span></td>'
+      +'<td class="right"><button class="btn sm '+(i.active?'red':'')+'" data-inst-toggle="'+i.id+'" data-active="'+(i.active?0:1)+'">'+(i.active?'убрать':'вернуть')+'</button></td></tr>';
+  });
+  html+='</table>'
+    +'<div class="card"><b>Добавить инструктора</b><div class="row">'
+    +'<input id="inst-name" placeholder="Имя"><input id="inst-exp" placeholder="опыт одной строкой" size="40">'
+    +'<button class="btn" id="inst-add">Добавить</button></div></div>';
+  return html;
+}
+
+function mskToUtc(date,time){return new Date(date+'T'+(time||'00:00')+':00+03:00').toISOString();}
+
+function bindActions(){
+  // записи
+  document.querySelectorAll('[data-bk]').forEach(function(b){b.onclick=function(){setBooking(+b.getAttribute('data-bk'),b.getAttribute('data-st'));};});
+  // локации
+  var la=document.getElementById('loc-add'); if(la)la.onclick=function(){
+    var t=val('loc-title'); if(!t)return; save('locations',{title:t,yard_type:val('loc-yard'),access_note:val('loc-access'),surface:val('loc-surface'),active:1});};
+  document.querySelectorAll('[data-loc-toggle]').forEach(function(b){b.onclick=function(){save('locations',{id:+b.getAttribute('data-loc-toggle'),active:+b.getAttribute('data-active')});};});
+  // шаблоны
+  var ta=document.getElementById('tpl-add'); if(ta)ta.onclick=function(){
+    save('session_templates',{location_id:+val('tpl-loc'),weekday:+val('tpl-wd'),time_msk:val('tpl-time'),age_group:val('tpl-age'),capacity:+val('tpl-cap'),price_kopecks:Math.round(+val('tpl-price')*100),valid_from:new Date().toISOString().slice(0,10),active:1});};
+  document.querySelectorAll('[data-tpl-toggle]').forEach(function(b){b.onclick=function(){save('session_templates',{id:+b.getAttribute('data-tpl-toggle'),active:+b.getAttribute('data-active')});};});
+  document.querySelectorAll('[data-tpl-inst]').forEach(function(s){s.onchange=function(){save('session_templates',{id:+s.getAttribute('data-tpl-inst'),instructor_id:s.value?+s.value:null});};});
+  // разовые занятия
+  var sa=document.getElementById('ss-add'); if(sa)sa.onclick=function(){
+    var d=val('ss-date'),t=val('ss-time'); if(!d||!t){alert('Укажите дату и время');return;}
+    save('sessions',{location_id:+val('ss-loc'),starts_at:mskToUtc(d,t),age_group:val('ss-age'),capacity:+val('ss-cap'),price_kopecks:Math.round(+val('ss-price')*100),kind:val('ss-kind'),status:'open'});};
+  document.querySelectorAll('[data-sess-close]').forEach(function(b){b.onclick=function(){if(confirm('Закрыть занятие?'))save('sessions',{id:+b.getAttribute('data-sess-close'),status:'cancelled'});};});
+  document.querySelectorAll('[data-sess-inst]').forEach(function(s){s.onchange=function(){save('sessions',{id:+s.getAttribute('data-sess-inst'),instructor_id:s.value?+s.value:null});};});
+  // инструкторы
+  var ia=document.getElementById('inst-add'); if(ia)ia.onclick=function(){var n=val('inst-name'); if(!n)return; save('instructors',{name:n,experience:val('inst-exp'),active:1});};
+  document.querySelectorAll('[data-inst-toggle]').forEach(function(b){b.onclick=function(){save('instructors',{id:+b.getAttribute('data-inst-toggle'),active:+b.getAttribute('data-active')});};});
+}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+
+// автологин если ключ есть
+if(KEY){api('/api/admin/data').then(function(d){DATA=d;showApp();render();}).catch(function(){});}
+</script>
+</body>
+</html>

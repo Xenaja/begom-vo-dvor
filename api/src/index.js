@@ -312,6 +312,72 @@ async function notifyBooking(env, db, bookingId) {
   } catch (_) { /* уведомление не должно ломать основной флоу */ }
 }
 
+// ---------- админка ----------
+function adminAuth(req, env) {
+  const key = req.headers.get('x-admin-key') || '';
+  return !!env.ADMIN_PASSWORD && key === env.ADMIN_PASSWORD;
+}
+// Белый список таблиц/колонок для безопасного upsert.
+const ADMIN_TABLES = {
+  locations: ['id', 'title', 'address', 'district', 'yard_type', 'access_note', 'surface', 'active', 'sort'],
+  instructors: ['id', 'name', 'experience', 'photo_url', 'pay_rate_kopecks', 'active', 'sort'],
+  session_templates: ['id', 'location_id', 'instructor_id', 'weekday', 'time_msk', 'duration_min', 'age_group', 'capacity', 'price_kopecks', 'valid_from', 'valid_until', 'active'],
+  sessions: ['id', 'location_id', 'instructor_id', 'template_id', 'kind', 'starts_at', 'duration_min', 'age_group', 'capacity', 'price_kopecks', 'status'],
+};
+async function adminUpsert(db, table, row) {
+  const cols = ADMIN_TABLES[table];
+  if (!cols) throw new Error('bad table');
+  const data = {};
+  for (const c of cols) if (c in row && row[c] !== undefined) data[c] = row[c];
+  const keys = Object.keys(data).filter((k) => k !== 'id');
+  if (row.id) {
+    const sql = `UPDATE ${table} SET ${keys.map((k) => k + '=?').join(',')} WHERE id=?`;
+    await db.prepare(sql).bind(...keys.map((k) => data[k]), row.id).run();
+    return row.id;
+  }
+  const sql = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`;
+  const r = await db.prepare(sql).bind(...keys.map((k) => data[k])).run();
+  return r.meta.last_row_id;
+}
+async function adminData(db) {
+  const nowI = nowIso();
+  const locations = (await db.prepare(`SELECT * FROM locations ORDER BY sort,id`).all()).results;
+  const instructors = (await db.prepare(`SELECT * FROM instructors ORDER BY sort,id`).all()).results;
+  const templates = (await db.prepare(`SELECT * FROM session_templates ORDER BY location_id,weekday,time_msk`).all()).results;
+  const sessions = (await db.prepare(
+    `SELECT s.*, l.title AS loc_title FROM sessions s JOIN locations l ON l.id=s.location_id
+      WHERE s.starts_at >= ?1 ORDER BY s.starts_at`).bind(nowI).all()).results;
+  const bookings = (await db.prepare(
+    `SELECT b.id, b.session_id, b.child_name, b.child_age, b.status, b.amount_kopecks, b.paid_with, b.created_at,
+            c.name AS parent_name, c.phone
+       FROM bookings b JOIN clients c ON c.id=b.client_id
+      WHERE b.session_id IN (SELECT id FROM sessions WHERE starts_at >= ?1)
+        AND b.status IN ('paid','attended','hold','no_show')
+      ORDER BY b.created_at`).bind(nowI).all()).results;
+  return { now: nowI, locations, instructors, templates, sessions, bookings };
+}
+const ADMIN_BOOKING_STATUSES = ['paid', 'attended', 'no_show', 'cancelled'];
+
+async function adminRouter(req, env, pathname) {
+  if (!adminAuth(req, env)) return json({ error: 'unauthorized' }, 401);
+  const db = env.DB;
+  if (pathname === '/api/admin/data' && req.method === 'GET')
+    return json(await adminData(db));
+  if (pathname === '/api/admin/upsert' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    const id = await adminUpsert(db, b.table, b.row || {});
+    if (b.table === 'session_templates') await materialize(db); // подтянуть новые занятия
+    return json({ ok: true, id });
+  }
+  if (pathname === '/api/admin/booking' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    if (!b.id || !ADMIN_BOOKING_STATUSES.includes(b.status)) return json({ error: 'bad_request' }, 400);
+    await db.prepare(`UPDATE bookings SET status=? WHERE id=?`).bind(b.status, b.id).run();
+    return json({ ok: true });
+  }
+  return json({ error: 'not_found' }, 404);
+}
+
 // ---------- роутер ----------
 export default {
   async fetch(req, env) {
@@ -332,6 +398,9 @@ export default {
 
       if (pathname === '/api/payment/notify' && req.method === 'POST')
         return paymentNotify(env, await req.json().catch(() => null));
+
+      if (pathname.startsWith('/api/admin/'))
+        return adminRouter(req, env, pathname);
 
       return json({ error: 'not_found' }, 404);
     } catch (e) {
