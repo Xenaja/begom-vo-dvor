@@ -57,8 +57,7 @@
   </header>
   <div class="wrap">
     <div class="tabs">
-      <button data-tab="bookings" class="active">Записи</button>
-      <button data-tab="schedule">Расписание</button>
+      <button data-tab="schedule" class="active">Расписание</button>
       <button data-tab="instructors">Инструкторы</button>
     </div>
     <div id="view"></div>
@@ -68,7 +67,7 @@
 <script>
 var API='https://begom-api.xenonline77.workers.dev';
 var KEY=localStorage.getItem('bvd_admin_key')||'';
-var DATA=null, TAB='bookings';
+var DATA=null, TAB='schedule';
 
 var WD=['', 'Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var fmtDT=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -208,18 +207,40 @@ function renderSchedule(){
 }
 
 function renderInstructors(){
-  var html='<h2>Инструкторы</h2><div class="hint">«Убрать» — скрывает инструктора (история сохраняется).</div>';
-  html+='<table><tr><th>Имя</th><th>Опыт (строка)</th><th>Активен</th><th></th></tr>';
+  var html='<h2>Инструкторы</h2><div class="hint">«Убрать» — скрывает инструктора (история сохраняется). Фото квадратное, сжимается до 400px автоматически.</div>';
+  html+='<table><tr><th>Фото</th><th>Имя</th><th>Опыт (строка)</th><th>Активен</th><th></th></tr>';
   DATA.instructors.forEach(function(i){
-    html+='<tr><td>'+esc(i.name)+'</td><td>'+esc(i.experience)+'</td>'
+    var thumb=i.photo_url?'<img src="'+esc(i.photo_url)+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover">':'<span class="muted">нет</span>';
+    html+='<tr><td>'+thumb+'<br><label class="muted" style="font-size:11px;cursor:pointer;text-decoration:underline">изменить<input type="file" accept="image/*" data-inst-photo="'+i.id+'" style="display:none"></label></td>'
+      +'<td>'+esc(i.name)+'</td><td>'+esc(i.experience)+'</td>'
       +'<td><span class="badge '+(i.active?'b-paid':'b-no_show')+'">'+(i.active?'да':'нет')+'</span></td>'
       +'<td class="right"><button class="btn sm '+(i.active?'red':'')+'" data-inst-toggle="'+i.id+'" data-active="'+(i.active?0:1)+'">'+(i.active?'убрать':'вернуть')+'</button></td></tr>';
   });
   html+='</table>'
     +'<div class="card"><b>Добавить инструктора</b><div class="row">'
-    +'<input id="inst-name" placeholder="Имя"><input id="inst-exp" placeholder="опыт одной строкой" size="40">'
+    +'<input id="inst-name" placeholder="Имя"><input id="inst-exp" placeholder="опыт одной строкой" size="36">'
+    +'<label class="muted">Фото<input id="inst-photo" type="file" accept="image/*"></label>'
     +'<button class="btn" id="inst-add">Добавить</button></div></div>';
   return html;
+}
+
+// читает картинку, сжимает до maxSize по большей стороне, отдаёт JPEG data-URL
+function fileToDataUrl(file,maxSize,cb){
+  if(!file){cb(null);return;}
+  var r=new FileReader();
+  r.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height,m=Math.max(w,h);
+      if(m>maxSize){var k=maxSize/m;w=Math.round(w*k);h=Math.round(h*k);}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.82));
+    };
+    img.onerror=function(){cb(null)};
+    img.src=r.result;
+  };
+  r.readAsDataURL(file);
 }
 
 function mskToUtc(date,time){return new Date(date+'T'+(time||'00:00')+':00+03:00').toISOString();}
@@ -243,8 +264,14 @@ function bindActions(){
   document.querySelectorAll('[data-sess-close]').forEach(function(b){b.onclick=function(){if(confirm('Закрыть занятие?'))save('sessions',{id:+b.getAttribute('data-sess-close'),status:'cancelled'});};});
   document.querySelectorAll('[data-sess-inst]').forEach(function(s){s.onchange=function(){save('sessions',{id:+s.getAttribute('data-sess-inst'),instructor_id:s.value?+s.value:null});};});
   // инструкторы
-  var ia=document.getElementById('inst-add'); if(ia)ia.onclick=function(){var n=val('inst-name'); if(!n)return; save('instructors',{name:n,experience:val('inst-exp'),active:1});};
+  var ia=document.getElementById('inst-add'); if(ia)ia.onclick=function(){
+    var n=val('inst-name'); if(!n)return;
+    var f=document.getElementById('inst-photo').files[0];
+    fileToDataUrl(f,400,function(url){save('instructors',{name:n,experience:val('inst-exp'),photo_url:url,active:1});});};
   document.querySelectorAll('[data-inst-toggle]').forEach(function(b){b.onclick=function(){save('instructors',{id:+b.getAttribute('data-inst-toggle'),active:+b.getAttribute('data-active')});};});
+  document.querySelectorAll('[data-inst-photo]').forEach(function(inp){inp.onchange=function(){
+    var f=inp.files[0]; if(!f)return;
+    fileToDataUrl(f,400,function(url){if(url)save('instructors',{id:+inp.getAttribute('data-inst-photo'),photo_url:url});});};});
 }
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 
