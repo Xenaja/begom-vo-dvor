@@ -184,6 +184,7 @@ async function book(env, body) {
              < (SELECT capacity FROM sessions WHERE id=?1)`
     ).bind(b.session_id, clientId, b.child_name, b.child_age || null, nowI).run();
     if (!res.meta.changes) return json({ error: 'no_seats' }, 409);
+    await notifyBooking(env, db, res.meta.last_row_id); // уведомление — запись на пробное
     return json({ ok: true, status: 'registered', booking_id: res.meta.last_row_id });
   }
 
@@ -249,11 +250,66 @@ async function paymentNotify(env, body) {
     await db.prepare(`UPDATE payments SET confirmed_at=? WHERE id=?`).bind(nowI, pay.id).run();
     await db.prepare(`UPDATE bookings SET status='paid', paid_with='tbank', paid_at=? WHERE id=? AND status<>'paid'`)
       .bind(nowI, pay.booking_id).run();
-    // TODO (следующий шаг): уведомление в TG/ВК — только оплаченные брони.
+    await notifyBooking(env, db, pay.booking_id); // уведомление в TG/ВК — оплачено
   } else if (['REJECTED', 'REFUNDED', 'REVERSED', 'PARTIAL_REFUNDED'].includes(status)) {
     await db.prepare(`UPDATE bookings SET status='cancelled' WHERE id=?`).bind(pay.booking_id).run();
   }
   return new Response('OK');
+}
+
+// ---------- уведомления (TG + ВК), только подтверждённые брони ----------
+async function buildBookingInfo(db, bookingId) {
+  return db.prepare(
+    `SELECT b.id, b.child_name, b.child_age, b.amount_kopecks,
+            s.starts_at, s.age_group, s.kind,
+            l.title AS loc_title,
+            c.name AS parent_name, c.phone
+       FROM bookings b
+       JOIN sessions s ON s.id=b.session_id
+       JOIN locations l ON l.id=s.location_id
+       JOIN clients c ON c.id=b.client_id
+      WHERE b.id=?`
+  ).bind(bookingId).first().catch(() => null);
+}
+function composeBookingText(info) {
+  const dt = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: 'Europe/Moscow', weekday: 'short', day: 'numeric', month: 'long',
+    hour: '2-digit', minute: '2-digit',
+  }).format(new Date(info.starts_at));
+  const pay = info.amount_kopecks > 0 ? ('оплачено ' + info.amount_kopecks / 100 + ' ₽') : 'пробное (бесплатно)';
+  const child = (info.child_name || '') + (info.child_age ? (', ' + info.child_age + ' лет') : '');
+  return [
+    '🟢 Новая запись — ' + pay,
+    '🏠 ' + info.loc_title,
+    '🗓 ' + dt + ' (МСК) · группа ' + info.age_group,
+    '👶 ' + child,
+    '👤 ' + (info.parent_name || ''),
+    '📞 ' + (info.phone || ''),
+  ].join('\n');
+}
+async function sendTelegram(env, text) {
+  return fetch('https://api.telegram.org/bot' + env.TG_TOKEN + '/sendMessage', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ chat_id: env.TG_CHAT_ID, text, disable_web_page_preview: true }),
+  });
+}
+async function sendVK(env, text) {
+  const p = new URLSearchParams({
+    access_token: env.VK_TOKEN, peer_id: env.VK_PEER, message: text,
+    random_id: String(Date.now() % 2147483647), v: '5.199',
+  });
+  return fetch('https://api.vk.com/method/messages.send', { method: 'POST', body: p });
+}
+async function notifyBooking(env, db, bookingId) {
+  try {
+    const info = await buildBookingInfo(db, bookingId);
+    if (!info) return;
+    const text = composeBookingText(info);
+    const tasks = [];
+    if (env.TG_TOKEN && env.TG_CHAT_ID) tasks.push(sendTelegram(env, text));
+    if (env.VK_TOKEN && env.VK_PEER) tasks.push(sendVK(env, text));
+    await Promise.allSettled(tasks);
+  } catch (_) { /* уведомление не должно ломать основной флоу */ }
 }
 
 // ---------- роутер ----------
