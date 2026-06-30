@@ -177,10 +177,8 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .founder h3{font-size:23px;color:var(--green-dark);margin-bottom:14px}
 .founder p{margin-bottom:14px}
 @media(max-width:920px){.founder{grid-template-columns:1fr;text-align:center}.founder .photo{max-width:300px;margin:0 auto}}
-.founder-photo{margin:0}
-.founder-photo-img{aspect-ratio:4/5;border-radius:22px;background:var(--ph-bg2) center/cover no-repeat;box-shadow:0 14px 30px rgba(120,140,70,.10)}
-.founder-photo figcaption{text-align:center;font-size:13px;color:var(--body2);font-weight:600;margin-top:10px}
-@media(max-width:920px){.founder-photo{max-width:300px;margin:0 auto}}
+.founder-photo-img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:22px;background:var(--ph-bg2);box-shadow:0 14px 30px rgba(120,140,70,.10)}
+@media(max-width:920px){.founder-photo-img{max-width:300px;margin:0 auto;display:block}}
 
 /* инструкторы */
 .badges{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:28px 0 8px}
@@ -421,10 +419,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   <div class="wrap narrow">
     <h2 class="h2"><span class="brush">Кто стоит за <span class="q">«</span>Бегом во двор<span class="q">»</span><svg viewBox="0 0 200 15" preserveAspectRatio="none"><path d="M4 9C50 4 150 4 196 7 198 12 188 14 150 13 90 15 40 14 6 13 2 11 2 10 4 9Z" fill="#B6D67E"/></svg></span></h2>
     <div class="founder">
-      <figure class="founder-photo">
-        <div class="founder-photo-img" style="background-image:url('assets/founder.jpg')"></div>
-        <figcaption>Ксения Торопова · основательница</figcaption>
-      </figure>
+      <img class="founder-photo-img" src="assets/founder.jpg" alt="Ксения Торопова — основательница проекта «Бегом во двор»">
       <div>
         <h3>Привет! Меня зовут Ксения</h3>
         <p>Я хотела вернуть детям то, что было у нас – живые дворовые игры, друзей и движение вместо экранов.</p>
