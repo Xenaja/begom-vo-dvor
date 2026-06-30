@@ -590,7 +590,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   var msg=document.getElementById('bf-msg');
   if(!bwLocs) return;
 
-  var data=null, locId=null, sel=null;
+  var data=null, locId=null, sel=null, expanded=false;
 
   // возврат с платёжной формы Т-Банка
   var pp=new URLSearchParams(location.search).get('payment');
@@ -627,7 +627,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       b.type='button';
       b.className='bw-loc'+(l.id===locId?' active':'');
       b.textContent=l.title;
-      b.onclick=function(){locId=l.id; sel=null; form.hidden=true; renderLocs(); renderSlots();};
+      b.onclick=function(){locId=l.id; sel=null; expanded=false; form.hidden=true; renderLocs(); renderSlots();};
       bwLocs.appendChild(b);
     });
   }
@@ -639,7 +639,13 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     var groups={};
     sess.forEach(function(s){var k=dayKey.format(new Date(s.starts_at));(groups[k]=groups[k]||[]).push(s);});
     var html='';
-    Object.keys(groups).sort().forEach(function(k){
+    var keys=Object.keys(groups).sort();
+    // показываем первые 2 недели от первого занятия, остальное — по кнопке
+    var cutoff=dayKey.format(new Date(new Date(keys[0]+'T00:00:00Z').getTime()+14*86400000));
+    var visKeys=expanded?keys:keys.filter(function(k){return k<=cutoff;});
+    if(!visKeys.length) visKeys=keys.slice(0,4);
+    var moreCount=keys.length-visKeys.length;
+    visKeys.forEach(function(k){
       var arr=groups[k];
       html+='<div class="bw-day"><h4>'+fmtDay.format(new Date(arr[0].starts_at))+'</h4><div class="bw-slot-grid">';
       arr.forEach(function(s){
@@ -655,6 +661,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       });
       html+='</div></div>';
     });
+    if(moreCount>0) html+='<div style="text-align:center;margin-top:6px"><button type="button" class="btn bw-more">Смотреть ещё →</button></div>';
     bwSlots.innerHTML=html;
     bwSlots.querySelectorAll('.bw-slot:not(.full)').forEach(function(el){
       el.onclick=function(){
@@ -662,6 +669,8 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
         renderSlots(); showForm(loc);
       };
     });
+    var moreBtn=bwSlots.querySelector('.bw-more');
+    if(moreBtn) moreBtn.onclick=function(){expanded=true; renderSlots();};
   }
 
   function showForm(loc){
