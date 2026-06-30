@@ -11,7 +11,7 @@ const MSK = '+03:00';        // МСК без перехода на летнее
 const cors = () => ({
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET,POST,OPTIONS',
-  'access-control-allow-headers': 'content-type',
+  'access-control-allow-headers': 'content-type, x-admin-key',
 });
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
