@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /index-classic.html
+
+Sitemap: https://begomvodvor.ru/sitemap.xml
