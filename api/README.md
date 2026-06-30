@@ -60,11 +60,18 @@ npx wrangler tail
 Идемпотентность — частичный уникальный индекс `(template_id, starts_at)`.
 Пробные занятия — разовые `sessions` без шаблона (`kind='trial'`, цена 0).
 
+## Готово
+
+- Оплата Т-Банка: `Init` с чеком + вебхук `POST /api/payment/notify` (при `CONFIRMED` → `paid`).
+  Секреты `TBANK_TERMINAL`, `TBANK_PASSWORD` — сейчас **DEMO**-терминал (боевой `1782733097700` заблокирован до прохождения тестов).
+- Уведомления — **Telegram активен** (`TG_TOKEN`, `TG_CHAT_ID`): бот @begom_zayavki_bot → группа «Бегом заявки».
+  Шлёт оплаченные брони и записи на пробные (`notifyBooking`).
+- Админка: `admin.html` + `/api/admin/*` (auth `x-admin-key` = секрет `ADMIN_PASSWORD`).
+
 ## Дальше (TODO)
 
-- Оплата Т-Банка: `POST /api/book` для регулярных → создать `hold` + Init → `PaymentURL`;
-  вебхук `POST /api/payment/notify` → при `CONFIRMED` пометить `paid` и уведомить.
-  Секреты: `TBANK_TERMINAL`, `TBANK_PASSWORD` (через `wrangler secret put`).
-- Уведомления (только оплаченные): TG `sendMessage` + ВК `messages.send`.
-  Секреты: `TG_TOKEN`, `TG_CHAT_ID`, `VK_TOKEN`, `VK_PEER`.
-- Админка: расписание, инструкторы, записи (роль `admin`/`instructor`).
+- **Уведомления ВК** (позже): `messages.send` через токен сообщества. Секреты `VK_TOKEN`, `VK_PEER`.
+  Получить токен сообщества `club239404587` (право «Сообщения сообщества») + определить peer (беседа сообщества).
+- Свап Т-Банка на боевой терминал после активации (`wrangler secret put TBANK_TERMINAL/TBANK_PASSWORD`).
+- L2: посещаемость/ЗП тренеров, перенос оплаты (баланс), ручная запись, лиды/сегменты.
+- L3: абонементы, рефералка, авторассылки, бот-кабинет.
