@@ -11,7 +11,7 @@ database_id = "5c8692ce-acac-4a76-ba50-276bd7abe661"
 # Резерв места без оплаты держим столько минут (истёкшие — освобождаются)
 [vars]
 HOLD_MINUTES = "15"
-SITE_URL = "https://xenaja.github.io/begom-vo-dvor"
+SITE_URL = "https://begomvodvor.ru"
 API_URL = "https://begom-api.xenonline77.workers.dev"
 TAXATION = "usn_income"   # режим налогообложения для чека (уточнить у заказчика)
 # Секреты (НЕ здесь): TBANK_TERMINAL, TBANK_PASSWORD — через `wrangler secret put`
