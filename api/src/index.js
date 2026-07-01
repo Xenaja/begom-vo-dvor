@@ -96,18 +96,20 @@ function normPhone(v) {
   return '+' + d;
 }
 
-async function upsertClient(db, { phone, name, consent_pd, consent_offer, source }) {
+async function upsertClient(db, { phone, name, consent, consent_marketing, source }) {
   const norm = normPhone(phone);
+  const c = consent ? 1 : 0;                 // общее согласие покрывает ПД + оферту/соглашение
+  const cm = consent_marketing ? 1 : 0;
   const ex = await db.prepare(`SELECT id FROM clients WHERE phone=?`).bind(norm).first();
   if (ex) {
     await db.prepare(
-      `UPDATE clients SET name=COALESCE(?,name), consent_pd=?, consent_offer=? WHERE id=?`
-    ).bind(name || null, consent_pd ? 1 : 0, consent_offer ? 1 : 0, ex.id).run();
+      `UPDATE clients SET name=COALESCE(?,name), consent_pd=?, consent_offer=?, consent_marketing=? WHERE id=?`
+    ).bind(name || null, c, c, cm, ex.id).run();
     return ex.id;
   }
   const ins = await db.prepare(
-    `INSERT INTO clients (phone,name,consent_pd,consent_offer,source) VALUES (?,?,?,?,?)`
-  ).bind(norm, name || null, consent_pd ? 1 : 0, consent_offer ? 1 : 0, source || 'web').run();
+    `INSERT INTO clients (phone,name,consent_pd,consent_offer,consent_marketing,source) VALUES (?,?,?,?,?,?)`
+  ).bind(norm, name || null, c, c, cm, source || 'web').run();
   return ins.meta.last_row_id;
 }
 
@@ -162,7 +164,7 @@ async function book(env, body) {
   const b = body || {};
   if (!b.session_id || !b.parent_name || !b.phone || !b.child_name)
     return json({ error: 'missing_fields' }, 400);
-  if (!b.consent_pd || !b.consent_offer)
+  if (!b.consent)
     return json({ error: 'consent_required' }, 400);
 
   const s = await db.prepare(`SELECT * FROM sessions WHERE id=?`).bind(b.session_id).first();
@@ -171,7 +173,7 @@ async function book(env, body) {
   if (s.starts_at < nowI) return json({ error: 'session_past' }, 409);
 
   const clientId = await upsertClient(db, {
-    phone: b.phone, name: b.parent_name, consent_pd: b.consent_pd, consent_offer: b.consent_offer,
+    phone: b.phone, name: b.parent_name, consent: b.consent, consent_marketing: b.consent_marketing,
   });
 
   // Бесплатное (пробное): атомарный резерв → сразу 'paid'.

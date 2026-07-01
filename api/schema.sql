@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS clients (
   balance_kopecks INTEGER NOT NULL DEFAULT 0,  -- кошелёк (перенос оплаты, L2)
   source          TEXT,                   -- web | leadmag | admin | bot | referral
   consent_pd      INTEGER NOT NULL DEFAULT 0,  -- согласие на обработку ПД (0/1) — обязателен
-  consent_offer   INTEGER NOT NULL DEFAULT 0,  -- согласие с договором-офертой (0/1) — обязателен
+  consent_offer   INTEGER NOT NULL DEFAULT 0,  -- согласие с офертой/польз.соглашением (0/1) — обязателен
+  consent_marketing INTEGER NOT NULL DEFAULT 0, -- согласие на рекламные/информационные сообщения (0/1) — опционально
   created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
   notes           TEXT
 );
