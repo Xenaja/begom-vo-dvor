@@ -494,7 +494,6 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       <div class="field"><label>Имя родителя</label><input name="parent_name" required></div>
       <div class="field"><label>Телефон</label><input name="phone" type="tel" inputmode="tel" placeholder="+7 ___ ___-__-__" required></div>
       <div class="field"><label>Имя ребёнка</label><input name="child_name" required></div>
-      <div class="field"><label>Возраст ребёнка</label><input name="child_age" type="number" min="3" max="12"></div>
       <label class="check"><input type="checkbox" name="consent" required><span>Соглашаюсь с <a href="docs/oferta.html" target="_blank" rel="noopener">офертой</a> и <a href="docs/terms.html" target="_blank" rel="noopener">пользовательским соглашением</a>, а также даю <a href="docs/consent.html" target="_blank" rel="noopener">согласие на обработку персональных данных</a> своих и ребёнка как законный представитель. <a href="docs/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a>.</span></label>
       <label class="check"><input type="checkbox" name="consent_marketing"><span>Согласен(на) получать рекламные и информационные сообщения клуба.</span></label>
       <button class="btn" type="submit" style="width:100%">Записаться</button>
@@ -704,7 +703,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     var btn=form.querySelector('button[type=submit]'); btn.disabled=true;
     var childName=form.child_name.value.trim();
     var payload={session_id:sel.id,parent_name:form.parent_name.value.trim(),phone:form.phone.value.trim(),
-      child_name:childName,child_age:form.child_age.value?+form.child_age.value:null,
+      child_name:childName,
       consent:form.consent.checked,consent_marketing:form.consent_marketing.checked};
     fetch(API+'/api/book',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(j){return{status:r.status,j:j}})})
