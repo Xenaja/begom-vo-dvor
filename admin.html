@@ -39,6 +39,17 @@
   #login input{width:100%;margin:12px 0;text-align:center}
   .hidden{display:none}
   .hint{font-size:13px;color:var(--muted);margin:4px 0 12px}
+  /* модалки */
+  .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal-box{background:#fff;border-radius:14px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow:auto}
+  .modal-box h3{margin:0 0 14px;font-size:18px}
+  .modal-box p{margin:0 0 8px;font-size:15px}
+  .frow{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .frow label{font-size:12px;color:var(--muted)}
+  .frow input,.frow select{width:100%}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+  .btn.big{padding:11px 18px;font-size:15px}
+  .day-h{font-weight:800;margin:16px 0 6px;font-size:14px;text-transform:capitalize;color:var(--dark)}
 </style>
 </head>
 <body>
@@ -64,6 +75,8 @@
   </div>
 </div>
 
+<div id="modal" class="modal-ov hidden"><div class="modal-box" id="modal-box"></div></div>
+
 <script>
 var API='https://begom-api.xenonline77.workers.dev';
 var KEY=localStorage.getItem('bvd_admin_key')||'';
@@ -85,6 +98,63 @@ function api(path,method,body){
 function load(){return api('/api/admin/data').then(function(d){DATA=d;render();});}
 function save(table,row){return api('/api/admin/upsert','POST',{table:table,row:row}).then(load);}
 function setBooking(id,status){return api('/api/admin/booking','POST',{id:id,status:status}).then(load);}
+function del(table,id){return api('/api/admin/delete','POST',{table:table,id:id}).then(function(r){
+  if(r&&r.error==='has_bookings'){alert('Нельзя удалить: на будущих занятиях есть записи. Сначала отмените эти занятия (клиенты получат уведомление).');}
+  return load();});}
+function cancelSession(id){return api('/api/admin/cancel-session','POST',{id:id}).then(function(r){
+  if(r&&r.ok){alert(r.notified>0?('Занятие отменено. Уведомление о '+r.notified+' записавш. отправлено в чат заявок.'):'Занятие отменено.');}
+  return load();});}
+
+// ---- модалки ----
+function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target.id==='modal')closeModal();});
+
+function confirmModal(text,okLabel,okClass,onOk){
+  openModal('<h3>Подтверждение</h3><p>'+esc(text)+'</p><div class="modal-actions">'
+    +'<button class="btn gray big" id="m-no">Отмена</button>'
+    +'<button class="btn '+(okClass||'red')+' big" id="m-yes">'+esc(okLabel)+'</button></div>');
+  document.getElementById('m-no').onclick=closeModal;
+  document.getElementById('m-yes').onclick=function(){closeModal();onOk();};
+}
+function ageOpts(sel){return '<option'+(sel==='5-6'?' selected':'')+'>5-6</option><option'+(sel==='7-9'?' selected':'')+'>7-9</option>';}
+
+function editTemplateModal(t){
+  var loc=DATA.locations.find(function(l){return l.id===t.location_id});
+  openModal('<h3>Редактировать занятие (регулярное)</h3>'
+    +'<div class="frow"><label>Двор (не меняется)</label><input value="'+esc(loc?loc.title:'')+'" disabled></div>'
+    +'<div class="frow"><label>День недели</label><select id="e-wd">'+[1,2,3,4,5,6,7].map(function(d){return '<option value="'+d+'"'+(d===t.weekday?' selected':'')+'>'+WD[d]+'</option>';}).join('')+'</select></div>'
+    +'<div class="frow"><label>Время (МСК)</label><input id="e-time" value="'+esc(t.time_msk)+'" placeholder="10:00"></div>'
+    +'<div class="frow"><label>Группа</label><select id="e-age">'+ageOpts(t.age_group)+'</select></div>'
+    +'<div class="frow"><label>Мест</label><input id="e-cap" type="number" value="'+t.capacity+'"></div>'
+    +'<div class="frow"><label>Цена, ₽</label><input id="e-price" type="number" value="'+(t.price_kopecks/100)+'"></div>'
+    +'<div class="frow"><label>Инструктор</label><select id="e-inst">'+instOptions(t.instructor_id)+'</select></div>'
+    +'<div class="modal-actions"><button class="btn gray big" id="m-no">Отмена</button><button class="btn big" id="m-save">Сохранить изменения</button></div>');
+  document.getElementById('m-no').onclick=closeModal;
+  document.getElementById('m-save').onclick=function(){
+    var row={id:t.id,weekday:+val('e-wd'),time_msk:val('e-time'),age_group:val('e-age'),capacity:+val('e-cap'),price_kopecks:Math.round(+val('e-price')*100),instructor_id:val('e-inst')?+val('e-inst'):null};
+    closeModal(); save('session_templates',row);
+  };
+}
+function editSessionModal(s){
+  var msk=new Date(new Date(s.starts_at).getTime()+3*3600e3);
+  var dstr=msk.toISOString().slice(0,10), tstr=msk.toISOString().slice(11,16);
+  openModal('<h3>Редактировать занятие (разовое)</h3>'
+    +'<div class="frow"><label>Двор (не меняется)</label><input value="'+esc(s.loc_title)+'" disabled></div>'
+    +'<div class="frow"><label>Дата</label><input id="e-date" type="date" value="'+dstr+'"></div>'
+    +'<div class="frow"><label>Время (МСК)</label><input id="e-time" value="'+tstr+'"></div>'
+    +'<div class="frow"><label>Группа</label><select id="e-age">'+ageOpts(s.age_group)+'</select></div>'
+    +'<div class="frow"><label>Мест</label><input id="e-cap" type="number" value="'+s.capacity+'"></div>'
+    +'<div class="frow"><label>Цена, ₽</label><input id="e-price" type="number" value="'+(s.price_kopecks/100)+'"></div>'
+    +'<div class="frow"><label>Тип</label><select id="e-kind"><option value="trial"'+(s.kind==='trial'?' selected':'')+'>пробное</option><option value="regular"'+(s.kind==='regular'?' selected':'')+'>разовое</option></select></div>'
+    +'<div class="frow"><label>Инструктор</label><select id="e-inst">'+instOptions(s.instructor_id)+'</select></div>'
+    +'<div class="modal-actions"><button class="btn gray big" id="m-no">Отмена</button><button class="btn big" id="m-save">Сохранить изменения</button></div>');
+  document.getElementById('m-no').onclick=closeModal;
+  document.getElementById('m-save').onclick=function(){
+    var row={id:s.id,starts_at:mskToUtc(val('e-date'),val('e-time')),age_group:val('e-age'),capacity:+val('e-cap'),price_kopecks:Math.round(+val('e-price')*100),kind:val('e-kind'),instructor_id:val('e-inst')?+val('e-inst'):null};
+    closeModal(); save('sessions',row);
+  };
+}
 
 // ---- логин ----
 function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
@@ -166,13 +236,15 @@ function renderSchedule(){
     +'<input id="loc-access" placeholder="доступ"><input id="loc-surface" placeholder="покрытие">'
     +'<button class="btn" id="loc-add">Добавить</button></div></div>';
 
-  html+='<h2>Регулярное расписание (шаблоны)</h2><div class="hint">Из шаблонов автоматически создаются занятия на 4 недели вперёд.</div>';
-  html+='<table><tr><th>Двор</th><th>День</th><th>Время</th><th>Группа</th><th>Мест</th><th>Цена</th><th>Инструктор</th><th>Активен</th></tr>';
+  html+='<h2>Регулярное расписание (шаблоны)</h2><div class="hint">Из шаблонов создаются занятия на 4 недели вперёд. Редактирование пересоздаёт будущие занятия (кроме тех, где уже есть записи).</div>';
+  html+='<table><tr><th>Двор</th><th>День</th><th>Время</th><th>Группа</th><th>Мест</th><th>Цена</th><th>Инструктор</th><th></th></tr>';
   DATA.templates.forEach(function(t){
+    var inst=DATA.instructors.find(function(i){return i.id===t.instructor_id});
     html+='<tr><td>'+esc(locName(t.location_id))+'</td><td>'+WD[t.weekday]+'</td><td>'+esc(t.time_msk)+'</td>'
       +'<td>'+esc(t.age_group)+'</td><td>'+t.capacity+'</td><td>'+rub(t.price_kopecks)+'</td>'
-      +'<td><select data-tpl-inst="'+t.id+'">'+instOptions(t.instructor_id)+'</select></td>'
-      +'<td><button class="btn sm '+(t.active?'':'gray')+'" data-tpl-toggle="'+t.id+'" data-active="'+(t.active?0:1)+'">'+(t.active?'да':'нет')+'</button></td></tr>';
+      +'<td>'+(inst?esc(inst.name):'<span class="muted">—</span>')+'</td>'
+      +'<td class="right"><button class="btn sm blue" data-tpl-edit="'+t.id+'">✏️ Ред.</button> '
+      +'<button class="btn sm red" data-tpl-del="'+t.id+'">🗑</button></td></tr>';
   });
   html+='</table>'
     +'<div class="card"><b>Добавить шаблон</b><div class="row">'
@@ -180,21 +252,37 @@ function renderSchedule(){
     +'<label>День<select id="tpl-wd"><option value="1">Пн</option><option value="2">Вт</option><option value="3">Ср</option><option value="4">Чт</option><option value="5">Пт</option><option value="6">Сб</option><option value="7">Вс</option></select></label>'
     +'<label>Время<input id="tpl-time" placeholder="10:00" size="5"></label>'
     +'<label>Группа<select id="tpl-age"><option>5-6</option><option>7-9</option></select></label>'
-    +'<label>Мест<input id="tpl-cap" type="number" value="12" size="3"></label>'
+    +'<label>Мест<input id="tpl-cap" type="number" value="8" size="3"></label>'
     +'<label>Цена ₽<input id="tpl-price" type="number" value="350" size="4"></label>'
     +'<button class="btn" id="tpl-add">Добавить</button></div></div>';
 
-  html+='<h2>Разовые занятия (напр. пробные)</h2>';
-  var oneoff=DATA.sessions.filter(function(s){return !s.template_id && s.status!=='cancelled'});
-  html+='<table><tr><th>Когда</th><th>Двор</th><th>Группа</th><th>Тип</th><th>Мест</th><th>Цена</th><th>Инструктор</th><th></th></tr>';
-  oneoff.forEach(function(s){
-    html+='<tr><td>'+fmtDT.format(new Date(s.starts_at))+'</td><td>'+esc(s.loc_title)+'</td><td>'+esc(s.age_group)+'</td>'
-      +'<td>'+(s.kind==='trial'?'пробное':'разовое')+'</td><td>'+s.capacity+'</td><td>'+rub(s.price_kopecks)+'</td>'
-      +'<td><select data-sess-inst="'+s.id+'">'+instOptions(s.instructor_id)+'</select></td>'
-      +'<td class="right"><button class="btn sm red" data-sess-close="'+s.id+'">закрыть</button></td></tr>';
+  // ближайшие занятия (конкретные даты)
+  var dayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit'});
+  var fmtDay=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'long',day:'numeric',month:'long'});
+  html+='<h2>Ближайшие занятия</h2><div class="hint">Отмена — на конкретную дату (погода / мало записей). Записавшимся уйдёт уведомление в чат заявок. Разовые можно ещё редактировать и удалять.</div>';
+  var bkCount={};
+  DATA.bookings.forEach(function(b){ if(['paid','attended','hold'].indexOf(b.status)>=0) bkCount[b.session_id]=(bkCount[b.session_id]||0)+1; });
+  var groups={};
+  DATA.sessions.filter(function(s){return s.status==='open'}).forEach(function(s){var k=dayKey.format(new Date(s.starts_at));(groups[k]=groups[k]||[]).push(s);});
+  var keys=Object.keys(groups).sort();
+  if(!keys.length) html+='<p class="muted">Занятий нет.</p>';
+  keys.forEach(function(k){
+    var arr=groups[k].sort(function(a,b){return a.starts_at<b.starts_at?-1:1});
+    html+='<div class="day-h">'+fmtDay.format(new Date(arr[0].starts_at))+'</div>';
+    html+='<table><tr><th>Время</th><th>Двор</th><th>Группа</th><th>Тип</th><th>Места</th><th>Записей</th><th></th></tr>';
+    arr.forEach(function(s){
+      var occ=bkCount[s.id]||0, free=s.capacity-occ;
+      var typ=s.kind==='trial'?'пробное':(s.template_id?'регулярное':'разовое');
+      var acts='<button class="btn sm gray" data-ss-cancel="'+s.id+'">⛔ Отменить</button>';
+      if(!s.template_id) acts='<button class="btn sm blue" data-ss-edit="'+s.id+'">✏️</button> '+acts+' <button class="btn sm red" data-ss-del="'+s.id+'">🗑</button>';
+      html+='<tr><td>'+fmtT.format(new Date(s.starts_at))+'</td><td>'+esc(s.loc_title)+'</td><td>'+esc(s.age_group)+'</td>'
+        +'<td>'+typ+'</td><td>'+free+'/'+s.capacity+'</td><td>'+occ+'</td>'
+        +'<td class="right">'+acts+'</td></tr>';
+    });
+    html+='</table>';
   });
-  html+='</table>'
-    +'<div class="card"><b>Добавить разовое занятие</b><div class="row">'
+
+  html+='<div class="card"><b>Добавить разовое занятие</b><div class="row">'
     +'<label>Двор<select id="ss-loc">'+DATA.locations.map(function(l){return '<option value="'+l.id+'">'+esc(l.title)+'</option>'}).join('')+'</select></label>'
     +'<label>Дата<input id="ss-date" type="date"></label>'
     +'<label>Время<input id="ss-time" placeholder="10:00" size="5"></label>'
@@ -254,15 +342,18 @@ function bindActions(){
   document.querySelectorAll('[data-loc-toggle]').forEach(function(b){b.onclick=function(){save('locations',{id:+b.getAttribute('data-loc-toggle'),active:+b.getAttribute('data-active')});};});
   // шаблоны
   var ta=document.getElementById('tpl-add'); if(ta)ta.onclick=function(){
-    save('session_templates',{location_id:+val('tpl-loc'),weekday:+val('tpl-wd'),time_msk:val('tpl-time'),age_group:val('tpl-age'),capacity:+val('tpl-cap'),price_kopecks:Math.round(+val('tpl-price')*100),valid_from:new Date().toISOString().slice(0,10),active:1});};
-  document.querySelectorAll('[data-tpl-toggle]').forEach(function(b){b.onclick=function(){save('session_templates',{id:+b.getAttribute('data-tpl-toggle'),active:+b.getAttribute('data-active')});};});
-  document.querySelectorAll('[data-tpl-inst]').forEach(function(s){s.onchange=function(){save('session_templates',{id:+s.getAttribute('data-tpl-inst'),instructor_id:s.value?+s.value:null});};});
-  // разовые занятия
+    var tm=val('tpl-time'); if(!tm){alert('Укажите время');return;}
+    save('session_templates',{location_id:+val('tpl-loc'),weekday:+val('tpl-wd'),time_msk:tm,age_group:val('tpl-age'),capacity:+val('tpl-cap'),price_kopecks:Math.round(+val('tpl-price')*100),valid_from:new Date().toISOString().slice(0,10),active:1});};
+  document.querySelectorAll('[data-tpl-edit]').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-tpl-edit');editTemplateModal(DATA.templates.find(function(t){return t.id===id}));};});
+  document.querySelectorAll('[data-tpl-del]').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-tpl-del');confirmModal('Вы действительно хотите удалить этот слот?','Да, удалить','red',function(){del('session_templates',id);});};});
+  // разовые занятия — добавление
   var sa=document.getElementById('ss-add'); if(sa)sa.onclick=function(){
     var d=val('ss-date'),t=val('ss-time'); if(!d||!t){alert('Укажите дату и время');return;}
     save('sessions',{location_id:+val('ss-loc'),starts_at:mskToUtc(d,t),age_group:val('ss-age'),capacity:+val('ss-cap'),price_kopecks:Math.round(+val('ss-price')*100),kind:val('ss-kind'),status:'open'});};
-  document.querySelectorAll('[data-sess-close]').forEach(function(b){b.onclick=function(){if(confirm('Закрыть занятие?'))save('sessions',{id:+b.getAttribute('data-sess-close'),status:'cancelled'});};});
-  document.querySelectorAll('[data-sess-inst]').forEach(function(s){s.onchange=function(){save('sessions',{id:+s.getAttribute('data-sess-inst'),instructor_id:s.value?+s.value:null});};});
+  // ближайшие занятия — ред./отмена/удаление
+  document.querySelectorAll('[data-ss-edit]').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-ss-edit');editSessionModal(DATA.sessions.find(function(s){return s.id===id}));};});
+  document.querySelectorAll('[data-ss-cancel]').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-ss-cancel');confirmModal('Вы действительно хотите отменить это занятие? Записавшимся уйдёт уведомление в чат.','Да, отменить','red',function(){cancelSession(id);});};});
+  document.querySelectorAll('[data-ss-del]').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-ss-del');confirmModal('Вы действительно хотите удалить это занятие?','Да, удалить','red',function(){del('sessions',id);});};});
   // инструкторы
   var ia=document.getElementById('inst-add'); if(ia)ia.onclick=function(){
     var n=val('inst-name'); if(!n)return;

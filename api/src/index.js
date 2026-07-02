@@ -398,23 +398,99 @@ async function adminData(db) {
 }
 const ADMIN_BOOKING_STATUSES = ['paid', 'attended', 'no_show', 'cancelled'];
 
+// есть ли активные брони на будущих занятиях шаблона
+async function templateHasBookings(db, tplId) {
+  const r = await db.prepare(
+    `SELECT count(*) n FROM bookings WHERE status IN ('paid','attended','hold')
+       AND session_id IN (SELECT id FROM sessions WHERE template_id=? AND starts_at>=?)`
+  ).bind(tplId, nowIso()).first();
+  return (r && r.n) > 0;
+}
+// редактирование шаблона: удалить будущие НЕзабронированные занятия и пересоздать
+async function regenerateTemplate(db, tplId) {
+  await db.prepare(
+    `DELETE FROM sessions WHERE template_id=? AND starts_at>=? AND status IN ('open','closed')
+       AND id NOT IN (SELECT session_id FROM bookings WHERE status IN ('paid','attended','hold'))`
+  ).bind(tplId, nowIso()).run();
+  await syncSchedule(db);
+}
+async function sessionBookings(db, sid) {
+  return (await db.prepare(
+    `SELECT b.child_name, b.amount_kopecks, c.name AS parent_name, c.phone
+       FROM bookings b JOIN clients c ON c.id=b.client_id
+      WHERE b.session_id=? AND b.status IN ('paid','attended','hold')`
+  ).bind(sid).all()).results;
+}
+async function notifyCancellation(env, info, bk) {
+  const dt = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: 'Europe/Moscow', weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+  }).format(new Date(info.starts_at));
+  const lines = bk.map((x) => '• ' + (x.child_name || '') + ' — ' + (x.parent_name || '') + ', ' + (x.phone || '')
+    + (x.amount_kopecks > 0 ? (' (оплачено ' + x.amount_kopecks / 100 + ' ₽)') : ''));
+  const text = ['⛔ Занятие отменено', '🏠 ' + info.loc, '🗓 ' + dt + ' (МСК) · группа ' + info.age_group,
+    '', 'Записаны (' + bk.length + '):', lines.join('\n'),
+    '', 'Предупредите клиентов об отмене и оформите возврат.'].join('\n');
+  const tasks = [];
+  if (env.TG_TOKEN && env.TG_CHAT_ID) tasks.push(sendTelegram(env, text));
+  if (env.VK_TOKEN && env.VK_PEER) tasks.push(sendVK(env, text));
+  await Promise.allSettled(tasks);
+}
+
 async function adminRouter(req, env, pathname) {
   if (!adminAuth(req, env)) return json({ error: 'unauthorized' }, 401);
   const db = env.DB;
   if (pathname === '/api/admin/data' && req.method === 'GET')
     return json(await adminData(db));
+
   if (pathname === '/api/admin/upsert' && req.method === 'POST') {
     const b = await req.json().catch(() => ({}));
     const id = await adminUpsert(db, b.table, b.row || {});
-    if (b.table === 'session_templates') await syncSchedule(db); // пересобрать занятия из шаблонов
+    if (b.table === 'session_templates') {
+      if (b.row && b.row.id) await regenerateTemplate(db, id); // редактирование → пересоздать занятия
+      else await syncSchedule(db);                             // новый шаблон → сгенерировать
+    }
     return json({ ok: true, id });
   }
+
   if (pathname === '/api/admin/booking' && req.method === 'POST') {
     const b = await req.json().catch(() => ({}));
     if (!b.id || !ADMIN_BOOKING_STATUSES.includes(b.status)) return json({ error: 'bad_request' }, 400);
     await db.prepare(`UPDATE bookings SET status=? WHERE id=?`).bind(b.status, b.id).run();
     return json({ ok: true });
   }
+
+  // удаление шаблона или разового занятия (с защитой от удаления при бронях)
+  if (pathname === '/api/admin/delete' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    if (b.table === 'session_templates') {
+      if (await templateHasBookings(db, b.id)) return json({ error: 'has_bookings' }, 409);
+      await db.prepare(`DELETE FROM sessions WHERE template_id=? AND starts_at>=?`).bind(b.id, nowIso()).run();
+      await db.prepare(`UPDATE sessions SET template_id=NULL WHERE template_id=?`).bind(b.id).run(); // прошлые — отвязать
+      await db.prepare(`DELETE FROM session_templates WHERE id=?`).bind(b.id).run();
+      return json({ ok: true });
+    }
+    if (b.table === 'sessions') {
+      const has = await db.prepare(`SELECT count(*) n FROM bookings WHERE session_id=? AND status IN ('paid','attended','hold')`).bind(b.id).first();
+      if ((has && has.n) > 0) return json({ error: 'has_bookings' }, 409);
+      await db.prepare(`DELETE FROM sessions WHERE id=?`).bind(b.id).run();
+      return json({ ok: true });
+    }
+    return json({ error: 'bad_table' }, 400);
+  }
+
+  // отмена конкретного занятия (одна дата) + уведомление записавшимся
+  if (pathname === '/api/admin/cancel-session' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    const info = await db.prepare(
+      `SELECT s.starts_at, s.age_group, l.title AS loc FROM sessions s JOIN locations l ON l.id=s.location_id WHERE s.id=?`
+    ).bind(b.id).first();
+    if (!info) return json({ error: 'not_found' }, 404);
+    const bk = await sessionBookings(db, b.id);
+    await db.prepare(`UPDATE sessions SET status='cancelled' WHERE id=?`).bind(b.id).run();
+    if (bk.length) await notifyCancellation(env, info, bk);
+    return json({ ok: true, notified: bk.length });
+  }
+
   return json({ error: 'not_found' }, 404);
 }
 
