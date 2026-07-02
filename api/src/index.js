@@ -65,6 +65,38 @@ async function materialize(db) {
   return stmts.length;
 }
 
+// Примирение занятий с шаблонами: закрыть будущие занятия отключённых шаблонов,
+// вернуть занятия снова включённых, синхронизировать вместимость/цену.
+async function reconcile(db) {
+  const nowI = nowIso();
+  // 1) закрыть будущие занятия отключённых шаблонов (кроме тех, где есть брони)
+  await db.prepare(
+    `UPDATE sessions SET status='closed'
+      WHERE status='open' AND starts_at>=?1 AND template_id IS NOT NULL
+        AND template_id IN (SELECT id FROM session_templates WHERE active=0)
+        AND id NOT IN (SELECT session_id FROM bookings WHERE status IN ('paid','attended','hold'))`
+  ).bind(nowI).run();
+  // 2) вернуть будущие авто-закрытые занятия снова включённых шаблонов
+  await db.prepare(
+    `UPDATE sessions SET status='open'
+      WHERE status='closed' AND starts_at>=?1 AND template_id IS NOT NULL
+        AND template_id IN (SELECT id FROM session_templates WHERE active=1)`
+  ).bind(nowI).run();
+  // 3) синхронизировать вместимость/цену будущих занятий с их шаблоном
+  await db.prepare(
+    `UPDATE sessions SET
+       capacity=(SELECT capacity FROM session_templates t WHERE t.id=sessions.template_id),
+       price_kopecks=(SELECT price_kopecks FROM session_templates t WHERE t.id=sessions.template_id)
+      WHERE status='open' AND starts_at>=?1 AND template_id IS NOT NULL
+        AND template_id IN (SELECT id FROM session_templates WHERE active=1)`
+  ).bind(nowI).run();
+}
+async function syncSchedule(db) {
+  const made = await materialize(db);
+  await reconcile(db);
+  return made;
+}
+
 // ---------- чтение расписания с остатком мест ----------
 async function getSchedule(db) {
   const nowI = nowIso();
@@ -374,7 +406,7 @@ async function adminRouter(req, env, pathname) {
   if (pathname === '/api/admin/upsert' && req.method === 'POST') {
     const b = await req.json().catch(() => ({}));
     const id = await adminUpsert(db, b.table, b.row || {});
-    if (b.table === 'session_templates') await materialize(db); // подтянуть новые занятия
+    if (b.table === 'session_templates') await syncSchedule(db); // пересобрать занятия из шаблонов
     return json({ ok: true, id });
   }
   if (pathname === '/api/admin/booking' && req.method === 'POST') {
@@ -396,7 +428,7 @@ export default {
         return json({ ok: true, now: nowIso() });
 
       if (pathname === '/api/materialize' && req.method === 'POST')
-        return json({ ok: true, materialized: await materialize(env.DB) });
+        return json({ ok: true, materialized: await syncSchedule(env.DB) });
 
       if (pathname === '/api/schedule' && req.method === 'GET')
         return json(await getSchedule(env.DB));
@@ -418,6 +450,6 @@ export default {
 
   // ежедневная генерация занятий на горизонт
   async scheduled(_event, env, ctx) {
-    ctx.waitUntil(materialize(env.DB));
+    ctx.waitUntil(syncSchedule(env.DB));
   },
 };
