@@ -193,7 +193,12 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .games-title{font-family:'Pangolin',cursive;font-size:42px;color:#fff;-webkit-text-stroke:.7px #fff;margin-bottom:14px}
 .games-sub{font-family:'Nunito',sans-serif;font-weight:700;font-size:19px;color:#EFF7DF;margin-bottom:34px}
 .games-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 30px;margin-bottom:52px}
-.games-cloud span{display:inline-block;font-family:'Dudu','Pangolin',cursive;line-height:1;white-space:nowrap}
+.games-cloud .gi{display:inline-block;transform:rotate(var(--rot)) translateY(var(--dy));animation:gfloat 4s ease-in-out infinite;will-change:transform}
+.games-cloud .gi-in{display:inline-block;font-family:'Dudu','Pangolin',cursive;line-height:1;white-space:nowrap;-webkit-text-stroke:.6px currentColor;transition:transform .2s ease;cursor:default}
+.games-cloud .gi:hover{position:relative;z-index:3}
+.games-cloud .gi:hover .gi-in{transform:scale(1.28)}
+@keyframes gfloat{0%,100%{transform:rotate(var(--rot)) translateY(var(--dy))}50%{transform:rotate(var(--rot)) translateY(calc(var(--dy) - 5px))}}
+@media(prefers-reduced-motion:reduce){.games-cloud .gi{animation:none}}
 .btn-games{display:inline-block;background:#fff;color:#5E8C24;font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;padding:16px 40px;border-radius:999px;box-shadow:0 10px 24px rgba(60,90,20,.18);transition:.18s}
 .btn-games:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(60,90,20,.24)}
 .games-decor{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
@@ -803,11 +808,13 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 (function(){
   var cloud=document.getElementById('gamesCloud'); if(!cloud) return;
   var games=["вышибалы","казаки-разбойники","светофор","эстафеты","лес/болото/озеро","резиночка","классики","съедобное-несъедобное","догонялки","найди свою пару","колечко-колечко","море волнуется раз","зеркало","карлики и великаны","фанты","ловишки","медведь и пчёлы","ручеёк","мыши в кладовой","перетягивание каната","у медведя во бору","путаница","меткий мяч","мышеловка","лови-бросай","по тропинке","скакалка","паутина","удочка"];
-  var sizes=[30,22,38,26,34,24,28,32], dys=[0,10,-8,6,-4,12,-10,4], weights=[800,700,900];
+  var sizes=[26,19,31,22,28,20,24,27], dys=[0,10,-8,6,-4,12,-10,4], weights=[800,700,900];
   var html='';
   games.forEach(function(name,i){
     var rot=((i*53)%17)-8, size=sizes[i%8], yellow=(i%3===0), weight=weights[i%3], dy=dys[i%8];
-    html+='<span style="font-weight:'+weight+';-webkit-text-stroke:.6px currentColor;font-size:'+size+'px;color:'+(yellow?'#FBE27A':'#ffffff')+';transform:rotate('+rot+'deg) translateY('+dy+'px)">'+name+'</span>';
+    var dur=(3+(i%6)*0.45).toFixed(2), delay=(-(i%7)*0.4).toFixed(2);
+    html+='<span class="gi" style="--rot:'+rot+'deg;--dy:'+dy+'px;animation-duration:'+dur+'s;animation-delay:'+delay+'s">'
+        +'<span class="gi-in" style="font-weight:'+weight+';font-size:'+size+'px;color:'+(yellow?'#FBE27A':'#ffffff')+'">'+name+'</span></span>';
   });
   cloud.innerHTML=html;
 })();
