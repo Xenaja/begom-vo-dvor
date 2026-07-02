@@ -166,6 +166,8 @@ async function book(env, body) {
     return json({ error: 'missing_fields' }, 400);
   if (!b.consent)
     return json({ error: 'consent_required' }, 400);
+  if (normPhone(b.phone).length !== 12)   // +7 и 10 цифр
+    return json({ error: 'bad_phone' }, 400);
 
   const s = await db.prepare(`SELECT * FROM sessions WHERE id=?`).bind(b.session_id).first();
   if (!s || s.status !== 'open') return json({ error: 'session_unavailable' }, 404);
