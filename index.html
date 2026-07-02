@@ -771,7 +771,9 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       msg.className='bf-msg err'; msg.textContent='Нужно принять оферту, соглашение и согласие на обработку данных.'; return;
     }
     var pd=(form.phone.value||'').replace(/\D/g,'');
-    if(!((pd.length===11&&(pd[0]==='7'||pd[0]==='8'))||pd.length===10)){
+    if(pd.length===11&&pd[0]==='8')pd='7'+pd.slice(1);
+    if(pd.length===10)pd='7'+pd;
+    if(!/^79\d{9}$/.test(pd)){
       msg.className='bf-msg err'; msg.textContent='Проверьте номер телефона — например, +7 900 123-45-67.'; form.phone.focus(); return;
     }
     var btn=form.querySelector('button[type=submit]'); btn.disabled=true;

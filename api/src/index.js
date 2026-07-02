@@ -91,9 +91,13 @@ async function getSchedule(db) {
 // ---------- запись ----------
 function normPhone(v) {
   let d = String(v || '').replace(/\D/g, '');
-  if (d.length === 11 && (d[0] === '8' || d[0] === '7')) d = '7' + d.slice(1);
+  if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
   if (d.length === 10) d = '7' + d;
   return '+' + d;
+}
+// российский мобильный: нормализованный вид +7 9XXXXXXXXX (11 цифр, вторая — 9)
+function validPhone(v) {
+  return /^\+79\d{9}$/.test(normPhone(v));
 }
 
 async function upsertClient(db, { phone, name, consent, consent_marketing, source }) {
@@ -166,7 +170,7 @@ async function book(env, body) {
     return json({ error: 'missing_fields' }, 400);
   if (!b.consent)
     return json({ error: 'consent_required' }, 400);
-  if (normPhone(b.phone).length !== 12)   // +7 и 10 цифр
+  if (!validPhone(b.phone))               // +7 9XXXXXXXXX
     return json({ error: 'bad_phone' }, 400);
 
   const s = await db.prepare(`SELECT * FROM sessions WHERE id=?`).bind(b.session_id).first();
