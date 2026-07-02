@@ -231,6 +231,7 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .bf-summary{background:var(--bg-alt);border:1px solid var(--card-bd);border-radius:13px;padding:12px 14px;font-weight:700;color:var(--head);margin-bottom:16px;font-size:15px}
 .bf-msg{margin-top:12px;font-weight:700;text-align:center;font-size:15px}
 .bf-msg.ok{color:var(--green-dark)} .bf-msg.err{color:#B23A3A}
+.bf-msg a{color:inherit;text-decoration:underline}
 
 /* лид-магнит */
 .leadmag{background:#FFFCF2;border:1.5px solid #F0E2B8;border-radius:28px;padding:44px 36px;text-align:center;margin-top:8px}
@@ -718,11 +719,13 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
         } else if(res.j&&res.j.error==='no_seats'){
           msg.className='bf-msg err'; msg.textContent='Увы, места только что закончились. Выберите другое время.'; load();
         } else if(res.j&&res.j.error==='consent_required'){
-          msg.className='bf-msg err'; msg.textContent='Нужны оба согласия.';
+          msg.className='bf-msg err'; msg.textContent='Отметьте согласие — без него записать не можем.';
+        } else if(res.j&&res.j.error==='bad_phone'){
+          msg.className='bf-msg err'; msg.textContent='Проверьте номер телефона — например, +7 900 123-45-67.'; form.phone.focus();
         } else {
-          msg.className='bf-msg err'; msg.textContent=(res.j&&res.j.message)||'Не получилось записать. Попробуйте ещё раз.';
+          msg.className='bf-msg err'; msg.innerHTML='Не удалось оформить запись. Попробуйте ещё раз через минуту или напишите нам — поможем записать: <a href="https://vk.ru/club239404587" target="_blank" rel="noopener">ВКонтакте</a>.';
         }
-      }).catch(function(){btn.disabled=false;msg.className='bf-msg err';msg.textContent='Сеть недоступна. Попробуйте позже.';});
+      }).catch(function(){btn.disabled=false;msg.className='bf-msg err';msg.innerHTML='Не удалось связаться с сервером. Проверьте интернет и попробуйте ещё раз, или напишите нам: <a href="https://vk.ru/club239404587" target="_blank" rel="noopener">ВКонтакте</a>.';});
   });
 
   load();
