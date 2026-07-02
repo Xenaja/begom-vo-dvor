@@ -140,13 +140,24 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .pain-a{font-weight:600;color:var(--green-dark)}
 .pain-close{text-align:center;max-width:680px;margin:28px auto 0;color:var(--body2)}
 
-/* во что играем */
-.games{background:#9BC158;color:#fff;overflow:hidden}
-.games h2{color:#fff;font-size:42px;text-align:center}
-.games-lead{text-align:center;font-weight:700;font-size:19px;max-width:620px;margin:22px auto 0;line-height:1.5}
-.games-weather{font-weight:800;opacity:.96;margin-top:14px}
-.games .decor{position:absolute;inset:0;pointer-events:none;opacity:.22}
-.games .decor img{position:absolute;width:80px}
+@font-face{font-family:'Dudu';src:url('assets/hero/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
+/* во что играем — «надписи на заборе» */
+.games{background:linear-gradient(180deg,#7CB342 0%,#73A838 100%);color:#fff;position:relative;overflow:hidden;padding:0}
+.games-wrap{max-width:960px;margin:0 auto;padding:74px 24px;text-align:center;position:relative;z-index:2}
+.games-title{font-family:'Pangolin',cursive;font-size:42px;color:#fff;-webkit-text-stroke:.7px #fff;margin-bottom:14px}
+.games-sub{font-family:'Nunito',sans-serif;font-weight:700;font-size:19px;color:#EFF7DF;margin-bottom:34px}
+.games-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 30px;margin-bottom:52px}
+.games-cloud span{display:inline-block;font-family:'Dudu','Pangolin',cursive;line-height:1;white-space:nowrap}
+.btn-games{display:inline-block;background:#fff;color:#5E8C24;font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;padding:16px 40px;border-radius:999px;box-shadow:0 10px 24px rgba(60,90,20,.18);transition:.18s}
+.btn-games:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(60,90,20,.24)}
+.games-decor{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.games-decor img{position:absolute}
+.gd-ball{top:28px;right:-20px;width:140px;opacity:.18;transform:rotate(8deg)}
+.gd-frisbee{bottom:24px;left:-24px;width:150px;opacity:.16;transform:rotate(-10deg)}
+.gd-cloud{position:absolute;stroke:#fff;fill:none;opacity:.5;stroke-width:2.2}
+.gd-cloud1{top:14%;left:7%;width:66px}
+.gd-cloud2{bottom:18%;right:9%;width:52px}
+@media(max-width:600px){.games-title{font-size:32px}.games-sub{font-size:16px}}
 
 /* основательница */
 .founder{display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:center;margin-top:36px}
@@ -381,18 +392,17 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 
 <!-- ВО ЧТО ИГРАЕМ -->
 <section class="games" id="games">
-  <div class="decor">
-    <img class="bob"   src="assets/hero/football.png"    style="top:10%;left:7%;width:64px" alt="">
-    <img class="bob-3" src="assets/hero/racket.png"      style="top:13%;right:8%;width:74px" alt="">
-    <img class="bob-2" src="assets/hero/volleyball.png"  style="bottom:16%;left:11%;width:58px" alt="">
-    <img class="bob-4" src="assets/hero/frisbee.png"     style="bottom:14%;right:11%;width:64px" alt="">
-    <img class="bob-3" src="assets/hero/shuttlecock.png" style="top:44%;left:47%;width:48px" alt="">
+  <div class="games-decor">
+    <img class="gd-ball" src="assets/football.png" alt="">
+    <img class="gd-frisbee" src="assets/frisbee.png" alt="">
+    <svg class="gd-cloud gd-cloud1 bob" viewBox="0 0 64 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
+    <svg class="gd-cloud gd-cloud2 bob-2" viewBox="0 0 64 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg>
   </div>
-  <div class="wrap narrow-s" style="position:relative;z-index:2">
-    <h2>Поиграем?</h2>
-    <p class="games-lead">В нашем запасе более 100 разнообразных подвижных игр для детей — скучать не придётся.</p>
-    <p class="games-lead games-weather">Играем на свежем воздухе почти в любую погоду! ☀️</p>
-    <div class="cta-row"><a class="btn btn-white btn-hero" href="#booking">Записаться на игры</a></div>
+  <div class="games-wrap">
+    <h2 class="games-title">Поиграем?</h2>
+    <p class="games-sub">Играем на свежем воздухе почти в любую погоду!</p>
+    <div class="games-cloud" id="gamesCloud"></div>
+    <a class="btn-games" href="#booking">Записаться на игры</a>
   </div>
 </section>
 
@@ -714,6 +724,19 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 // лид-магнит — заглушка (подключим сбор email позже)
 (function(){var f=document.getElementById('leadForm');if(!f)return;
   f.addEventListener('submit',function(e){e.preventDefault();alert('Спасибо! Сбор гайда скоро подключим.');});})();
+
+// секция «Поиграем?» — раскидка названий игр (детерминированно по индексу)
+(function(){
+  var cloud=document.getElementById('gamesCloud'); if(!cloud) return;
+  var games=["вышибалы","казаки-разбойники","светофор","эстафеты","лес/болото/озеро","резиночка","классики","съедобное-несъедобное","догонялки","найди свою пару","колечко-колечко","море волнуется раз","зеркало","карлики и великаны","фанты","ловишки","медведь и пчёлы","ручеёк","мыши в кладовой","перетягивание каната","у медведя во бору","путаница","меткий мяч","мышеловка","лови-бросай","по тропинке","скакалка","паутина","удочка"];
+  var sizes=[30,22,38,26,34,24,28,32], dys=[0,10,-8,6,-4,12,-10,4], weights=[800,700,900];
+  var html='';
+  games.forEach(function(name,i){
+    var rot=((i*53)%17)-8, size=sizes[i%8], yellow=(i%3===0), weight=weights[i%3], dy=dys[i%8];
+    html+='<span style="font-weight:'+weight+';-webkit-text-stroke:.6px currentColor;font-size:'+size+'px;color:'+(yellow?'#FBE27A':'#ffffff')+';transform:rotate('+rot+'deg) translateY('+dy+'px)">'+name+'</span>';
+  });
+  cloud.innerHTML=html;
+})();
 </script>
 </body>
 </html>

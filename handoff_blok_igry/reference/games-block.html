@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Блок «Поиграем?» — референс</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pangolin&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  @font-face{font-family:'Dudu';src:url('assets/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Nunito',sans-serif;background:#fff}
+  @keyframes bobslow{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+</style>
+</head>
+<body>
+
+<section id="games" style="position:relative;background:linear-gradient(180deg,#7CB342 0%,#73A838 100%);overflow:hidden">
+  <img src="assets/football.png" alt="" style="position:absolute;top:28px;right:-20px;width:140px;opacity:.18;transform:rotate(8deg)"/>
+  <img src="assets/frisbee.png" alt="" style="position:absolute;bottom:24px;left:-24px;width:150px;opacity:.16;transform:rotate(-10deg)"/>
+  <span style="position:absolute;top:54px;left:9%;animation:bobslow 11s ease-in-out infinite"><svg width="78" height="42" viewBox="0 0 64 36" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg></span>
+  <span style="position:absolute;bottom:48px;right:11%;transform:scale(.78);animation:bobslow 13s ease-in-out infinite"><svg width="78" height="42" viewBox="0 0 64 36" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30 C6 30 4 22 11 20 C9 12 20 9 24 15 C27 8 40 9 41 17 C50 14 55 24 47 28 C46 30 44 30 42 30Z"/></svg></span>
+  <div style="position:relative;max-width:960px;margin:0 auto;padding:74px 24px;text-align:center">
+    <h2 style="font-family:'Pangolin',cursive;font-weight:400;-webkit-text-stroke:0.7px currentColor;font-size:42px;color:#fff;margin-bottom:14px">Поиграем?</h2>
+    <p style="font-size:19px;color:#EFF7DF;font-weight:700;margin-bottom:34px">Играем на&nbsp;свежем воздухе почти в&nbsp;любую погоду!</p>
+    <div id="gametags" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 30px;margin-bottom:52px"></div>
+    <a href="#booking" style="display:inline-block;background:#fff;color:#5E8C24;font-weight:900;font-size:19px;padding:16px 40px;border-radius:999px;box-shadow:0 10px 24px rgba(60,90,20,.18);text-decoration:none">Записаться на&nbsp;игры</a>
+  </div>
+</section>
+
+<script>
+  var games = ['вышибалы','казаки-разбойники','светофор','эстафеты','лес/болото/озеро','резиночка','классики','съедобное-несъедобное','догонялки','найди свою пару','колечко-колечко','море волнуется раз','зеркало','карлики и великаны','фанты','ловишки','медведь и пчёлы','ручеёк','мыши в кладовой','перетягивание каната','у медведя во бору','путаница','меткий мяч','мышеловка','лови-бросай','по тропинке','скакалка','паутина','удочка'];
+  var wrap = document.getElementById('gametags');
+  games.forEach(function(name, i){
+    var rot = ((i * 53) % 17) - 8;                 // -8..8 град, детерминированно
+    var size = [30, 22, 38, 26, 34, 24, 28, 32][i % 8];
+    var yellow = (i % 3 === 0);
+    var weight = [800, 700, 900][i % 3];
+    var dy = [0, 10, -8, 6, -4, 12, -10, 4][i % 8]; // вертикальный разброс
+    var s = document.createElement('span');
+    s.textContent = name;
+    s.style.cssText = [
+      'display:inline-block',
+      "font-family:'Dudu','Pangolin',cursive",
+      'font-weight:' + weight,
+      '-webkit-text-stroke:0.6px currentColor',
+      'font-size:' + size + 'px',
+      'line-height:1',
+      'color:' + (yellow ? '#FBE27A' : '#ffffff'),
+      'transform:rotate(' + rot + 'deg) translateY(' + dy + 'px)',
+      'white-space:nowrap'
+    ].join(';');
+    wrap.appendChild(s);
+  });
+</script>
+
+</body>
+</html>
