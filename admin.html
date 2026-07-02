@@ -140,7 +140,7 @@ function editTemplateModal(t){
 function editSessionModal(s){
   var msk=new Date(new Date(s.starts_at).getTime()+3*3600e3);
   var dstr=msk.toISOString().slice(0,10), tstr=msk.toISOString().slice(11,16);
-  openModal('<h3>Редактировать занятие (разовое)</h3>'
+  openModal('<h3>Редактировать занятие (эта дата)</h3>'
     +'<div class="frow"><label>Двор (не меняется)</label><input value="'+esc(s.loc_title)+'" disabled></div>'
     +'<div class="frow"><label>Дата</label><input id="e-date" type="date" value="'+dstr+'"></div>'
     +'<div class="frow"><label>Время (МСК)</label><input id="e-time" value="'+tstr+'"></div>'
@@ -274,8 +274,9 @@ function renderSchedule(){
     arr.forEach(function(s){
       var occ=bkCount[s.id]||0, free=s.capacity-occ;
       var typ=s.kind==='trial'?'пробное':(s.template_id?'регулярное':'разовое');
-      var acts='<button class="btn sm gray" data-ss-cancel="'+s.id+'">⛔ Отменить</button>';
-      if(!s.template_id) acts='<button class="btn sm blue" data-ss-edit="'+s.id+'">✏️</button> '+acts+' <button class="btn sm red" data-ss-del="'+s.id+'">🗑</button>';
+      var acts='<button class="btn sm blue" data-ss-edit="'+s.id+'">✏️</button> '
+        +'<button class="btn sm gray" data-ss-cancel="'+s.id+'">⛔ Отменить</button> '
+        +'<button class="btn sm red" data-ss-del="'+s.id+'">🗑</button>';
       html+='<tr><td>'+fmtT.format(new Date(s.starts_at))+'</td><td>'+esc(s.loc_title)+'</td><td>'+esc(s.age_group)+'</td>'
         +'<td>'+typ+'</td><td>'+free+'/'+s.capacity+'</td><td>'+occ+'</td>'
         +'<td class="right">'+acts+'</td></tr>';

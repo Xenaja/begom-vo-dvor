@@ -65,29 +65,22 @@ async function materialize(db) {
   return stmts.length;
 }
 
-// Примирение занятий с шаблонами: закрыть будущие занятия отключённых шаблонов,
-// вернуть занятия снова включённых, синхронизировать вместимость/цену.
+// Примирение: закрыть будущие занятия отключённых шаблонов, вернуть снова включённых.
+// (Вместимость/цену поштучных занятий НЕ трогаем — чтобы правки по конкретной дате
+//  не откатывались. Общие изменения применяются через пересоздание при правке шаблона.)
 async function reconcile(db) {
   const nowI = nowIso();
-  // 1) закрыть будущие занятия отключённых шаблонов (кроме тех, где есть брони)
+  // закрыть будущие занятия отключённых шаблонов (кроме тех, где есть брони)
   await db.prepare(
     `UPDATE sessions SET status='closed'
       WHERE status='open' AND starts_at>=?1 AND template_id IS NOT NULL
         AND template_id IN (SELECT id FROM session_templates WHERE active=0)
         AND id NOT IN (SELECT session_id FROM bookings WHERE status IN ('paid','attended','hold'))`
   ).bind(nowI).run();
-  // 2) вернуть будущие авто-закрытые занятия снова включённых шаблонов
+  // вернуть будущие авто-закрытые занятия снова включённых шаблонов
   await db.prepare(
     `UPDATE sessions SET status='open'
       WHERE status='closed' AND starts_at>=?1 AND template_id IS NOT NULL
-        AND template_id IN (SELECT id FROM session_templates WHERE active=1)`
-  ).bind(nowI).run();
-  // 3) синхронизировать вместимость/цену будущих занятий с их шаблоном
-  await db.prepare(
-    `UPDATE sessions SET
-       capacity=(SELECT capacity FROM session_templates t WHERE t.id=sessions.template_id),
-       price_kopecks=(SELECT price_kopecks FROM session_templates t WHERE t.id=sessions.template_id)
-      WHERE status='open' AND starts_at>=?1 AND template_id IS NOT NULL
         AND template_id IN (SELECT id FROM session_templates WHERE active=1)`
   ).bind(nowI).run();
 }
@@ -472,7 +465,11 @@ async function adminRouter(req, env, pathname) {
     if (b.table === 'sessions') {
       const has = await db.prepare(`SELECT count(*) n FROM bookings WHERE session_id=? AND status IN ('paid','attended','hold')`).bind(b.id).first();
       if ((has && has.n) > 0) return json({ error: 'has_bookings' }, 409);
-      await db.prepare(`DELETE FROM sessions WHERE id=?`).bind(b.id).run();
+      const s = await db.prepare(`SELECT template_id FROM sessions WHERE id=?`).bind(b.id).first();
+      if (s && s.template_id)  // регулярное — тумбстоун, иначе пересоздастся генератором
+        await db.prepare(`UPDATE sessions SET status='cancelled' WHERE id=?`).bind(b.id).run();
+      else
+        await db.prepare(`DELETE FROM sessions WHERE id=?`).bind(b.id).run();
       return json({ ok: true });
     }
     return json({ error: 'bad_table' }, 400);
