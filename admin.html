@@ -60,12 +60,13 @@
   <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
   <button class="btn" id="loginBtn" style="width:100%">Войти</button>
   <div id="loginErr" class="muted" style="margin-top:10px;color:#b85c5c"></div>
+  <a href="#" id="forgot" style="display:inline-block;margin-top:14px;color:#5E8C24;font-size:14px">Забыли пароль?</a>
 </div>
 
 <div id="app" class="hidden">
   <header>
     <b>Бегом во двор · админка</b>
-    <button id="logout">Выйти</button>
+    <div style="display:flex;gap:8px"><button id="chgpw">Пароль</button><button id="logout">Выйти</button></div>
   </header>
   <div class="wrap">
     <div class="tabs">
@@ -168,6 +169,47 @@ document.getElementById('loginBtn').onclick=function(){
     .catch(function(){document.getElementById('loginErr').textContent='Неверный пароль';});
 };
 document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginBtn').click();});
+
+// ---- смена / восстановление пароля ----
+document.getElementById('chgpw').onclick=function(){changePwModal();};
+document.getElementById('forgot').onclick=function(e){e.preventDefault();resetModal();};
+function changePwModal(){
+  openModal('<h3>Смена пароля</h3>'
+    +'<div class="frow"><label>Новый пароль (мин. 6 символов)</label><input id="np1" type="password"></div>'
+    +'<div class="frow"><label>Повторите новый пароль</label><input id="np2" type="password"></div>'
+    +'<div class="modal-actions"><button class="btn gray big" id="m-no">Отмена</button><button class="btn big" id="m-save">Сохранить</button></div>');
+  document.getElementById('m-no').onclick=closeModal;
+  document.getElementById('m-save').onclick=function(){
+    var a=val('np1'),b=val('np2');
+    if(a.length<6){alert('Пароль слишком короткий (мин. 6 символов).');return;}
+    if(a!==b){alert('Пароли не совпадают.');return;}
+    api('/api/admin/password','POST',{next:a}).then(function(r){
+      if(r&&r.ok){KEY=a;localStorage.setItem('bvd_admin_key',KEY);closeModal();alert('Пароль изменён и сохранён на этом устройстве.');}
+      else alert('Не удалось сменить пароль.');});
+  };
+}
+function resetReq(){return fetch(API+'/api/admin/reset-request',{method:'POST'}).then(function(r){return r.json();});}
+function resetConf(code,next){return fetch(API+'/api/admin/reset-confirm',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:code,next:next})}).then(function(r){return r.json();});}
+function resetModal(){
+  openModal('<h3>Восстановление пароля</h3>'
+    +'<p class="muted" style="font-size:13px">Нажмите «Отправить код» — он придёт в Telegram-чат заявок. Затем введите код и новый пароль.</p>'
+    +'<div style="margin:10px 0"><button class="btn big" id="r-send">Отправить код в Telegram</button></div>'
+    +'<hr style="border:none;border-top:1px solid #eee;margin:14px 0">'
+    +'<div class="frow"><label>Код из Telegram</label><input id="r-code" inputmode="numeric" autocomplete="one-time-code"></div>'
+    +'<div class="frow"><label>Новый пароль (мин. 6)</label><input id="r-np" type="password"></div>'
+    +'<div class="modal-actions"><button class="btn gray big" id="m-no">Закрыть</button><button class="btn big" id="r-confirm">Сменить пароль</button></div>');
+  document.getElementById('m-no').onclick=closeModal;
+  document.getElementById('r-send').onclick=function(){
+    resetReq().then(function(){alert('Если Telegram подключён — код отправлен в чат заявок. Проверьте сообщения.');});};
+  document.getElementById('r-confirm').onclick=function(){
+    var c=val('r-code'),n=val('r-np');
+    if(!c){alert('Введите код.');return;}
+    if(n.length<6){alert('Пароль слишком короткий (мин. 6 символов).');return;}
+    resetConf(c,n).then(function(r){
+      if(r&&r.ok){KEY=n;localStorage.setItem('bvd_admin_key',KEY);closeModal();alert('Пароль изменён. Входим…');api('/api/admin/data').then(function(d){DATA=d;showApp();render();});}
+      else alert(r&&r.error==='bad_code'?'Неверный код.':(r&&r.error==='expired'?'Код истёк — запросите новый.':(r&&r.error==='no_request'?'Сначала отправьте код.':'Не удалось сменить пароль.')));});
+  };
+}
 
 document.querySelectorAll('.tabs button').forEach(function(b){
   b.onclick=function(){TAB=b.getAttribute('data-tab');

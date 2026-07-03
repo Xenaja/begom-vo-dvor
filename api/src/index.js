@@ -346,9 +346,40 @@ async function notifyBooking(env, db, bookingId) {
 }
 
 // ---------- админка ----------
-function adminAuth(req, env) {
+function toHex(bytes) { return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join(''); }
+async function getSetting(db, k) { const r = await db.prepare(`SELECT value FROM settings WHERE key=?`).bind(k).first(); return r ? r.value : null; }
+async function setSetting(db, k, v) { await db.prepare(`INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`).bind(k, v).run(); }
+// пароль: соль:sha256(соль:пароль)
+async function hashPw(pw, saltHex) { const salt = saltHex || toHex(crypto.getRandomValues(new Uint8Array(16))); return salt + ':' + (await sha256hex(salt + ':' + pw)); }
+async function verifyPw(pw, stored) { if (!stored) return false; return (await hashPw(pw, stored.split(':')[0])) === stored; }
+
+// авторизация: мастер-пароль из секрета ADMIN_PASSWORD (восстановление) ИЛИ хэш в БД
+async function adminAuth(req, env) {
   const key = req.headers.get('x-admin-key') || '';
-  return !!env.ADMIN_PASSWORD && key === env.ADMIN_PASSWORD;
+  if (!key) return false;
+  if (env.ADMIN_PASSWORD && key === env.ADMIN_PASSWORD) return true;
+  return verifyPw(key, await getSetting(env.DB, 'admin_pass_hash'));
+}
+// восстановление пароля: код в Telegram-чат заявок
+async function resetRequest(env) {
+  if (env.TG_TOKEN && env.TG_CHAT_ID) {
+    const code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
+    const exp = new Date(Date.now() + 10 * 60000).toISOString();
+    await setSetting(env.DB, 'admin_reset', (await hashPw(code)) + '|' + exp);
+    await sendTelegram(env, '🔑 Код для смены пароля админки: ' + code + '\nДействует 10 минут. Если вы не запрашивали — игнорируйте.');
+  }
+  return json({ ok: true });
+}
+async function resetConfirm(env, b) {
+  if (!b || !b.code || !b.next || String(b.next).length < 6) return json({ error: 'bad_request' }, 400);
+  const stored = await getSetting(env.DB, 'admin_reset');
+  if (!stored) return json({ error: 'no_request' }, 400);
+  const parts = stored.split('|');
+  if (new Date(parts[1]) < new Date()) return json({ error: 'expired' }, 400);
+  if (!(await verifyPw(String(b.code), parts[0]))) return json({ error: 'bad_code' }, 400);
+  await setSetting(env.DB, 'admin_pass_hash', await hashPw(b.next));
+  await setSetting(env.DB, 'admin_reset', '');
+  return json({ ok: true });
 }
 // Белый список таблиц/колонок для безопасного upsert.
 const ADMIN_TABLES = {
@@ -430,8 +461,23 @@ async function notifyCancellation(env, info, bk) {
 }
 
 async function adminRouter(req, env, pathname) {
-  if (!adminAuth(req, env)) return json({ error: 'unauthorized' }, 401);
   const db = env.DB;
+  // без авторизации — восстановление пароля
+  if (pathname === '/api/admin/reset-request' && req.method === 'POST')
+    return resetRequest(env);
+  if (pathname === '/api/admin/reset-confirm' && req.method === 'POST')
+    return resetConfirm(env, await req.json().catch(() => ({})));
+
+  if (!(await adminAuth(req, env))) return json({ error: 'unauthorized' }, 401);
+
+  // смена пароля (в интерфейсе)
+  if (pathname === '/api/admin/password' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    if (!b.next || String(b.next).length < 6) return json({ error: 'weak_password' }, 400);
+    await setSetting(db, 'admin_pass_hash', await hashPw(b.next));
+    return json({ ok: true });
+  }
+
   if (pathname === '/api/admin/data' && req.method === 'GET')
     return json(await adminData(db));
 
