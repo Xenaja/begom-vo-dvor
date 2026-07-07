@@ -235,6 +235,9 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .safety-item .ic{width:52px;height:52px;border-radius:50%;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;flex:none}
 .safety-item p{font-weight:600;color:var(--card-tx);font-size:16px}
 .info-plate{margin-top:24px;background:var(--chip-bg);border:1px solid var(--chip-bd);color:var(--chip-tx);border-radius:16px;padding:18px 22px;font-weight:600;text-align:center}
+.clothes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+.clothes-grid img{width:100%;height:auto;display:block}
+@media(max-width:560px){.clothes-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
 @media(max-width:920px){.safety{grid-template-columns:1fr}}
 
 /* запись */
@@ -456,7 +459,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
   <div class="wrap narrow">
     <h2 class="h2"><span class="brush">Кто стоит за <span class="q">«</span>Бегом во двор<span class="q">»</span><svg viewBox="0 0 200 15" preserveAspectRatio="none"><path d="M4 9C50 4 150 4 196 7 198 12 188 14 150 13 90 15 40 14 6 13 2 11 2 10 4 9Z" fill="#B6D67E"/></svg></span></h2>
     <div class="founder">
-      <img loading="lazy" decoding="async" class="founder-photo-img" src="assets/founder.webp" alt="Ксения Торопова — основательница проекта «Бегом во двор»">
+      <img loading="lazy" decoding="async" class="founder-photo-img" src="assets/founder.webp" alt="Ксения Торопова с сыновьями — основательница проекта «Бегом во двор»">
       <div>
         <h3>Привет!</h3>
         <p>Меня зовут Ксения. Я мама двоих мальчишек, 7 и 9 лет. «Бегом во двор» родился из желания вернуть детям живое общение, дворовый азарт и радость движения, которые мы знали в своём детстве.</p>
@@ -514,6 +517,14 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
       <div class="safety-item"><div class="ic"><svg width="26" viewBox="0 0 24 24" fill="none" stroke="#5E9223" stroke-width="1.9"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div><p>Игры подобраны по возрасту, без жёсткой нагрузки</p></div>
     </div>
     <div class="info-plate">Что взять: кроссовки, шорты ниже колена, головной убор, вода; в прохладу – ветровку.</div>
+    <div class="clothes-grid">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_1.webp" alt="Панамка или кепка">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_2.webp" alt="Футболка">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_3.webp" alt="Шорты ниже колена">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_5.webp" alt="Удобная обувь — кроссовки или кеды">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_4.webp" alt="Бутылочка с водой">
+      <img loading="lazy" decoding="async" src="assets/clothes/pic_6.webp" alt="Лёгкая кофта или ветровка, если прохладно">
+    </div>
   </div>
 </section>
 
