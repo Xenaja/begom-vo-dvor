@@ -104,6 +104,14 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 .hero-photo-meta{font-weight:600;color:var(--body2);font-size:16px;margin-bottom:24px}
 @media(max-width:600px){.hero-photo-sub{font-size:20px}}
 
+/* вариант hero с бегущими детьми (для сравнения) */
+.hero-run{background:radial-gradient(120% 100% at 50% 0%, #EAF4D6 0%, #FFFFFF 65%);padding:44px 0 0;text-align:center;overflow:hidden}
+.hero-run-mark{height:64px;width:auto;max-width:90%;margin:0 auto;display:block}
+.hero-run-sub{font-family:'Pangolin',cursive;font-size:24px;color:var(--head);margin:16px auto 6px;max-width:640px}
+.hero-run-meta{font-weight:600;color:var(--body2);font-size:16px;margin-bottom:22px}
+.hero-run-img{max-width:1000px;width:100%;height:auto;margin:22px auto 0;display:block}
+@media(max-width:600px){.hero-run-mark{height:42px}.hero-run-sub{font-size:19px}}
+
 /* ===== HERO «обложка» ===== */
 @font-face{font-family:'Dudu';src:url('assets/hero/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
 .hero2{background:#9BC158;color:#fff;overflow:hidden;position:relative;padding-top:88px}
@@ -140,6 +148,8 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #F0EEE6}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:11px 24px;max-width:1180px;margin:0 auto}
 .nav-logo{width:50px;height:50px;border-radius:50%}
+.nav-wordmark{height:32px;width:auto;display:block}
+@media(max-width:600px){.nav-wordmark{height:26px}}
 .nav-links{display:flex;align-items:center;gap:28px}
 .nav-links a.link{font-weight:700;font-size:15.5px;color:var(--body)}
 .nav-links a.link:hover{color:var(--green-dark)}
@@ -346,7 +356,7 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 <!-- ШАПКА -->
 <header>
   <nav class="nav">
-    <a href="#top" aria-label="Бегом во двор"><img class="nav-logo" src="assets/logo.webp" alt="Бегом во двор"></a>
+    <a href="#top" aria-label="Бегом во двор"><img class="nav-wordmark" src="assets/logo-wordmark.svg" alt="Бегом во двор"></a>
     <div class="nav-links">
       <a class="link" href="#how">Как это работает</a>
       <a class="link" href="#games">Во что играем</a>
@@ -388,6 +398,18 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     <p class="hero-photo-meta">350 ₽ · 45 минут · 5–6 и 7–9 лет · Санкт-Петербург</p>
     <a class="btn btn-hero" href="#booking">Записать ребёнка</a>
   </div>
+</section>
+
+<!-- ВАРИАНТ 3 HERO (бегущие дети) — временно, для сравнения -->
+<div class="cmp-label">↓ Вариант 3 (бегущие дети) — для сравнения ↓</div>
+<section class="hero-run">
+  <div class="wrap">
+    <img class="hero-run-mark" src="assets/logo-wordmark.svg" alt="Бегом во двор">
+    <p class="hero-run-sub">Подвижные игры во дворе, как в нашем детстве</p>
+    <p class="hero-run-meta">350 ₽ · 45 минут · 5–6 и 7–9 лет · Санкт-Петербург</p>
+    <a class="btn btn-hero" href="#booking">Записать ребёнка</a>
+  </div>
+  <img class="hero-run-img" loading="lazy" decoding="async" src="assets/hero/kids-run.webp" alt="Дети бегут играть во двор">
 </section>
 
 <!-- СУТЬ -->
