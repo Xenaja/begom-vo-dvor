@@ -95,6 +95,15 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 .btn-white{background:#fff;color:var(--green-dark)} .btn-white:hover{background:#EEF5DE;color:var(--green-dark)}
 .cta-row{text-align:center;margin-top:40px}
 
+/* вариант hero с фото (для сравнения) */
+.cmp-label{text-align:center;background:#EEF2E4;color:#6B675E;font-size:13px;font-weight:800;padding:9px;letter-spacing:.3px}
+.hero-photo{background:radial-gradient(120% 120% at 50% 0%, #F4F9EA 0%, #FFFFFF 62%);padding:40px 0 56px;text-align:center;overflow:hidden}
+.hero-photo-img{max-width:720px;width:100%;height:auto;margin:0 auto;display:block}
+.hero-photo-sub{font-family:'Pangolin',cursive;font-size:26px;color:var(--head);margin:16px auto 6px;max-width:660px}
+.hero-photo-sub .accent2{color:var(--green-dark)}
+.hero-photo-meta{font-weight:600;color:var(--body2);font-size:16px;margin-bottom:24px}
+@media(max-width:600px){.hero-photo-sub{font-size:20px}}
+
 /* ===== HERO «обложка» ===== */
 @font-face{font-family:'Dudu';src:url('assets/hero/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
 .hero2{background:#9BC158;color:#fff;overflow:hidden;position:relative;padding-top:88px}
@@ -367,6 +376,17 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     <img class="snar bob-3" src="assets/hero/frisbee.webp"         alt="фрисби">
     <img class="snar bob"   src="assets/hero/shuttlecock.webp"     alt="волан">
     <img class="kid bob-4" src="assets/hero/kid-racket-white.webp" alt="ребёнок с ракеткой">
+  </div>
+</section>
+
+<!-- ВАРИАНТ 2 HERO (с фото) — временно, для сравнения -->
+<div class="cmp-label">↓ Вариант 2 (с фото) — для сравнения ↓</div>
+<section class="hero-photo">
+  <div class="wrap">
+    <img class="hero-photo-img" loading="lazy" decoding="async" src="assets/hero/kids-logo.webp" alt="Бегом во двор — дети с ракеткой и скакалкой">
+    <p class="hero-photo-sub">Подвижные игры во дворе, <span class="accent2">как в нашем детстве</span></p>
+    <p class="hero-photo-meta">350 ₽ · 45 минут · 5–6 и 7–9 лет · Санкт-Петербург</p>
+    <a class="btn btn-hero" href="#booking">Записать ребёнка</a>
   </div>
 </section>
 
