@@ -98,37 +98,37 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 /* вариант hero с фото (для сравнения) */
 .cmp-label{text-align:center;background:#EEF2E4;color:#6B675E;font-size:13px;font-weight:800;padding:9px;letter-spacing:.3px}
 .hero-photo{background:radial-gradient(120% 120% at 50% 0%, #F4F9EA 0%, #FFFFFF 62%);overflow:hidden}
-.hero-photo-inner{position:relative;min-height:calc(100vh - 60px);display:flex;align-items:center}
-.hero-photo-text{max-width:48%;text-align:left;position:relative;z-index:2;padding:40px 0}
-.hero-photo-sub{font-family:'Pangolin',cursive;font-size:30px;color:var(--head);margin:0 0 8px;max-width:480px}
+.hero-photo-inner{min-height:calc(100vh - 60px);display:grid;grid-template-columns:1fr 1.05fr;column-gap:30px;align-items:center;align-content:end}
+.hero-photo-text{text-align:left}
+.hero-photo-sub{font-family:'Pangolin',cursive;font-size:36px;line-height:1.15;color:var(--head);margin:0 0 10px;max-width:520px}
 .hero-photo-sub .accent2{color:var(--green-dark)}
-.hero-photo-meta{font-weight:600;color:var(--body2);font-size:17px;margin:0 0 26px}
-.hero-photo-photo{position:absolute;right:0;bottom:0;width:56%;max-width:860px;z-index:1;pointer-events:none}
+.hero-photo-meta{font-weight:600;color:var(--body2);font-size:19px;margin:0 0 28px}
+.hero-photo-photo{align-self:end;justify-self:end;width:100%;max-width:860px}
 .hero-photo-img{width:100%;height:auto;display:block}
 @media(max-width:820px){
-  .hero-photo-inner{display:block;min-height:auto;padding-top:34px;text-align:center}
-  .hero-photo-text{max-width:100%;text-align:center;padding:0 0 6px}
+  .hero-photo-inner{display:flex;flex-direction:column;min-height:auto;padding-top:20px;text-align:center}
+  .hero-photo-photo{order:1;width:100%;max-width:460px;margin:0 auto}
+  .hero-photo-text{order:2;text-align:center;padding:16px 0 30px}
   .hero-photo-sub{margin-left:auto;margin-right:auto}
-  .hero-photo-photo{position:static;width:100%;max-width:520px;margin:6px auto 0}
 }
-@media(max-width:600px){.hero-photo-sub{font-size:22px}}
+@media(max-width:600px){.hero-photo-sub{font-size:26px}.hero-photo-meta{font-size:16px}}
 
 /* вариант hero с бегущими детьми (для сравнения) */
 .hero-run{background:radial-gradient(130% 120% at 15% 0%, #EAF4D6 0%, #FFFFFF 58%);overflow:hidden}
-.hero-run-inner{position:relative;min-height:calc(100vh - 60px);display:flex;align-items:center}
-.hero-run-text{max-width:48%;text-align:left;position:relative;z-index:2;padding:40px 0}
-.hero-run-mark{height:72px;width:auto;max-width:100%;display:block;margin:0 0 18px}
-.hero-run-sub{font-family:'Pangolin',cursive;font-size:30px;color:var(--head);margin:0 0 8px;max-width:480px}
-.hero-run-meta{font-weight:600;color:var(--body2);font-size:17px;margin:0 0 26px}
-.hero-run-photo{position:absolute;right:0;bottom:0;width:56%;max-width:860px;z-index:1;pointer-events:none}
+.hero-run-inner{min-height:calc(100vh - 60px);display:grid;grid-template-columns:1fr 1.05fr;column-gap:30px;align-items:center;align-content:end}
+.hero-run-text{text-align:left}
+.hero-run-mark{height:88px;width:auto;max-width:100%;display:block;margin:0 0 20px}
+.hero-run-sub{font-family:'Pangolin',cursive;font-size:36px;line-height:1.15;color:var(--head);margin:0 0 10px;max-width:520px}
+.hero-run-meta{font-weight:600;color:var(--body2);font-size:19px;margin:0 0 28px}
+.hero-run-photo{align-self:end;justify-self:end;width:100%;max-width:860px}
 .hero-run-img{width:100%;height:auto;display:block;transform:scaleX(-1)}
 @media(max-width:820px){
-  .hero-run-inner{display:block;min-height:auto;padding-top:34px;text-align:center}
-  .hero-run-text{max-width:100%;text-align:center;padding:0 0 6px}
+  .hero-run-inner{display:flex;flex-direction:column;min-height:auto;padding-top:20px;text-align:center}
+  .hero-run-photo{order:1;width:100%;max-width:440px;margin:0 auto}
+  .hero-run-text{order:2;text-align:center;padding:16px 0 30px}
   .hero-run-mark,.hero-run-sub{margin-left:auto;margin-right:auto}
-  .hero-run-photo{position:static;width:100%;max-width:520px;margin:6px auto 0}
 }
-@media(max-width:600px){.hero-run-mark{height:46px}.hero-run-sub{font-size:22px}}
+@media(max-width:600px){.hero-run-mark{height:52px}.hero-run-sub{font-size:26px}.hero-run-meta{font-size:16px}}
 
 /* ===== HERO «обложка» ===== */
 @font-face{font-family:'Dudu';src:url('assets/hero/dudu.ttf') format('truetype');font-weight:400;font-display:swap}
