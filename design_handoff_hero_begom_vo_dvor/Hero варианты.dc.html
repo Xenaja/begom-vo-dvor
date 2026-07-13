@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Pangolin&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Nunito',system-ui,sans-serif;background:#EDEFE7}
+  @keyframes bob2{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-7px) rotate(6deg)}}
+</style>
+</helmet>
+
+<section style="padding:56px 60px 80px;display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:baseline;gap:14px;font-family:'Nunito';color:#6B675E">
+    <span style="font-family:'Pangolin';font-size:22px;color:#2B2A26">Герой-блок — вариант с кругом</span>
+    <span style="font-size:15px">белый круг за надписью, мягкие холмы, дети по краям</span>
+  </div>
+
+  <div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start">
+
+    <!-- ДЕСКТОП -->
+    <div id="4a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="background:#2B2A26;color:#fff;font-weight:800;font-size:13px;letter-spacing:.5px;padding:5px 12px;border-radius:999px">Десктоп</span>
+      </div>
+
+      <div style="width:1180px;height:600px;border-radius:34px;overflow:hidden;position:relative;background:linear-gradient(120deg,#FFFFFF 0%,#FFFFFF 46%,#F3F8E8 100%);box-shadow:0 30px 70px rgba(90,110,50,.16);display:grid;grid-template-columns:.82fr 1.18fr">
+
+        <!-- левая: текст -->
+        <div style="align-self:center;padding:0 24px 0 64px;z-index:4">
+          <div style="position:relative;width:40px;height:40px;margin-bottom:26px">
+            <svg style="width:40px;height:40px;display:block" viewBox="0 0 24 24" fill="#FCC21B" stroke="#2B2A26" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>
+            <svg style="position:absolute;top:-8px;right:-40px;width:16px;height:16px;animation:bob2 9s ease-in-out infinite" viewBox="0 0 24 24" fill="#FCC21B" stroke="#2B2A26" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>
+          </div>
+          <h1 style="font-family:'Nunito',sans-serif;font-weight:600;font-size:39px;line-height:1.14;color:#2B2A26;margin-bottom:16px;text-wrap:balance">Подвижные игры на улице рядом с домом</h1>
+          <p style="font-weight:600;color:#7C7A72;font-size:17px;margin-bottom:26px">350 ₽ · 45 минут · 5–6 и 7–9 лет</p>
+          <div style="display:inline-flex;align-items:center;gap:10px;background:#FFF3D6;border:1px solid #F2D58A;color:#8A6314;font-weight:700;font-size:15px;padding:10px 20px;border-radius:999px;margin-bottom:26px"><span style="width:10px;height:10px;border-radius:50%;background:#F0A93C"></span>Пробные занятия</div>
+          <div><a style="display:inline-flex;align-items:center;justify-content:center;background:#7CB342;color:#fff;font-weight:900;border-radius:999px;padding:17px 40px;font-size:20px;box-shadow:0 14px 30px rgba(124,179,66,.4)">Записать ребёнка</a></div>
+        </div>
+
+        <!-- правая: сцена -->
+        <div style="position:relative;overflow:visible">
+          <!-- мягкие холмы -->
+          <svg viewBox="0 0 700 600" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0"><path d="M0 300 C160 210 330 250 470 300 C580 340 640 320 700 330 L700 600 L0 600 Z" fill="#EAF3D6"/><path d="M0 400 C170 320 340 350 480 400 C600 442 650 428 700 440 L700 600 L0 600 Z" fill="#DCEBBF"/></svg>
+          <!-- белый круг -->
+          <!-- дети + надпись -->
+          <img src="assets/kids-logo.png" alt="Бегом во двор — дети с ракеткой и скакалкой" style="position:absolute;left:40%;bottom:0;transform:translateX(-50%);width:118%;max-width:none;height:auto;z-index:2">
+          <!-- звёздочки -->
+          <svg style="position:absolute;top:40px;right:64px;width:22px;animation:bob2 8s ease-in-out infinite;z-index:3" viewBox="0 0 24 24" fill="#FCC21B" stroke="#2B2A26" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2.5l2.7 6.3 6.8.6-5.2 4.4 1.6 6.7-5.7-3.6-5.7 3.6 1.6-6.7-5.2-4.4 6.8-.6z"/></svg>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- МОБАЙЛ -->
+    <div id="4b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="background:#2B2A26;color:#fff;font-weight:800;font-size:13px;letter-spacing:.5px;padding:5px 12px;border-radius:999px">Мобайл</span>
+      </div>
+
+      <div style="width:390px;border-radius:34px;overflow:hidden;position:relative;background:#FFFFFF;box-shadow:0 30px 70px rgba(90,110,50,.16);display:flex;flex-direction:column">
+
+        <!-- сцена -->
+        <div style="position:relative;height:372px;flex:none;overflow:hidden;background:#EAF3D6">
+          <svg viewBox="0 0 390 372" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0"><path d="M0 230 C90 185 200 205 270 232 C330 255 360 246 390 252 L390 372 L0 372 Z" fill="#DCEBBF"/></svg>
+          <img src="assets/kids-logo.png" alt="Бегом во двор — дети с ракеткой и скакалкой" style="position:absolute;left:49%;bottom:34px;transform:translateX(-50%);width:96%;max-width:none;height:auto;z-index:2">
+          <!-- белая волна — переход к текстовой части -->
+          <svg viewBox="0 0 390 70" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:-1px;width:100%;height:70px;display:block;z-index:3"><path d="M0 42 C90 16 150 20 220 32 C290 44 340 30 390 36 L390 71 L0 71 Z" fill="#FFFFFF"/></svg>
+        </div>
+
+        <!-- текст -->
+        <div style="padding:6px 28px 34px;text-align:center;z-index:4;background:#FFFFFF">
+          <h1 style="font-family:'Nunito',sans-serif;font-weight:600;font-size:27px;line-height:1.18;color:#2B2A26;margin-bottom:12px;text-wrap:balance">Подвижные игры на улице рядом с домом</h1>
+          <p style="font-weight:600;color:#7C7A72;font-size:15px;margin-bottom:16px">350 ₽ · 45 минут · 5–6 и 7–9 лет</p>
+          <div style="display:inline-flex;align-items:center;gap:9px;background:#FFF3D6;border:1px solid #F2D58A;color:#8A6314;font-weight:700;font-size:13.5px;padding:9px 18px;border-radius:999px;margin-bottom:16px"><span style="width:9px;height:9px;border-radius:50%;background:#F0A93C"></span>Пробные занятия</div>
+          <div><a style="display:inline-flex;align-items:center;justify-content:center;background:#7CB342;color:#fff;font-weight:900;border-radius:999px;padding:15px 36px;font-size:18px;box-shadow:0 12px 26px rgba(124,179,66,.4)">Записать ребёнка</a></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
