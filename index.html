@@ -116,8 +116,8 @@ section{padding:78px 0;position:relative;scroll-margin-top:84px}
 .hero-scene-star{position:absolute;top:40px;right:64px;width:22px;animation:bob2 8s ease-in-out infinite;z-index:3}
 .hero-mwave{display:none}
 @media(max-width:820px){
-  .hero-card{margin:14px auto 30px;padding:0 14px}
-  .hero-inner{grid-template-columns:1fr;min-height:0;background:#FFFFFF}
+  .hero-card{margin:0 0 30px;padding:0}
+  .hero-inner{grid-template-columns:1fr;min-height:0;background:#FFFFFF;border-radius:0;box-shadow:none}
   .hero-scene{order:1;height:360px;overflow:hidden;background:#EAF3D6}
   .hero-scene-img{left:49%;bottom:34px;width:96%}
   .hero-scene-star{display:none}
@@ -149,7 +149,18 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .nav-links{display:flex;align-items:center;gap:28px}
 .nav-links a.link{font-weight:700;font-size:15.5px;color:var(--body)}
 .nav-links a.link:hover{color:var(--green-dark)}
-@media(max-width:920px){.nav-links .link{display:none}}
+.nav-burger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer}
+.nav-burger span{display:block;width:24px;height:2.5px;border-radius:2px;background:var(--head);transition:transform .25s ease,opacity .2s ease}
+.nav-burger.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+.nav-burger.open span:nth-child(2){opacity:0}
+.nav-burger.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+@media(max-width:920px){
+  .nav-burger{display:flex}
+  .nav-links{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:#fff;border-bottom:1px solid #F0EEE6;box-shadow:0 14px 30px rgba(80,90,50,.10);padding:6px 0;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height .3s ease,opacity .2s ease}
+  .nav-links.open{max-height:360px;opacity:1;pointer-events:auto}
+  .nav-links a.link{display:block;padding:13px 24px;font-size:16px}
+  .nav-links .btn-nav{margin:8px 24px 6px;text-align:center}
+}
 
 /* ============ HERO ============ */
 .hero{background:radial-gradient(120% 120% at 80% 0%, #F4F9EA 0%, #FFFFFF 60%);overflow:hidden;padding-top:64px;padding-bottom:64px}
@@ -353,7 +364,8 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 <header>
   <nav class="nav">
     <a href="#top" aria-label="Бегом во двор"><img class="nav-wordmark" src="assets/logo-wordmark.svg" alt="Бегом во двор"></a>
-    <div class="nav-links">
+    <button class="nav-burger" id="navBurger" type="button" aria-label="Меню" aria-controls="navLinks" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
       <a class="link" href="#how">Как это работает</a>
       <a class="link" href="#games">Во что играем</a>
       <a class="link" href="#faq">Вопросы</a>
@@ -663,6 +675,19 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
 </script>
 
 <script>
+// мобильное меню-гамбургер
+(function(){
+  var b = document.getElementById('navBurger'), m = document.getElementById('navLinks');
+  if(!b || !m) return;
+  function setOpen(open){
+    m.classList.toggle('open', open);
+    b.classList.toggle('open', open);
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  b.addEventListener('click', function(){ setOpen(!m.classList.contains('open')); });
+  m.addEventListener('click', function(e){ if(e.target.closest('a')) setOpen(false); });
+})();
+
 // FAQ-аккордеон: одновременно открыт максимум один
 (function(){
   var list = document.getElementById('faqList');
