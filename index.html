@@ -684,8 +684,12 @@ footer{background:var(--footer-bg);color:var(--footer-tx);padding:54px 0 30px}
     b.classList.toggle('open', open);
     b.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
-  b.addEventListener('click', function(){ setOpen(!m.classList.contains('open')); });
-  m.addEventListener('click', function(e){ if(e.target.closest('a')) setOpen(false); });
+  b.addEventListener('click', function(e){ e.stopPropagation(); setOpen(!m.classList.contains('open')); });
+  m.addEventListener('click', function(e){ e.stopPropagation(); if(e.target.closest('a')) setOpen(false); });
+  // закрытие при клике/тапе вне меню
+  document.addEventListener('click', function(){ if(m.classList.contains('open')) setOpen(false); });
+  // закрытие при прокрутке страницы
+  window.addEventListener('scroll', function(){ if(m.classList.contains('open')) setOpen(false); }, {passive:true});
 })();
 
 // FAQ-аккордеон: одновременно открыт максимум один
